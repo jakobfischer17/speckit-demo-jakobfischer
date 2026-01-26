@@ -1,0 +1,124 @@
+.tips-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.tips-container h1 {
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #f39c12;
+}
+
+.tip-card {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-radius: 20px;
+  padding: 3rem;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  margin-bottom: 2rem;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.tip-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.tip-title {
+  font-size: 2rem;
+  color: white;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.tip-description {
+  font-size: 1.2rem;
+  color: rgba(255,255,255,0.95);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.tip-counter {
+  color: rgba(255,255,255,0.8);
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+
+.tip-navigation {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.nav-btn {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: bold;
+}
+
+.nav-btn:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.all-tips-section {
+  margin-top: 3rem;
+}
+
+.all-tips-section h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.tip-item {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 2px solid transparent;
+}
+
+.tip-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  border-color: #3498db;
+}
+
+.tip-item.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.tip-item-icon {
+  font-size: 1.5rem;
+}
+
+.tip-item-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+}

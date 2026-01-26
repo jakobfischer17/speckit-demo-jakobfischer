@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './PomodoroTimer.css';
 
 function PomodoroTimer() {
@@ -14,6 +14,15 @@ function PomodoroTimer() {
     shortBreak: { duration: 5, label: 'Short Break' },
     longBreak: { duration: 15, label: 'Long Break' },
   };
+
+  const playNotificationSound = useCallback(() => {
+    // Simple notification (browsers may require user interaction first)
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('Pomodoro Timer', {
+        body: 'Time is up!',
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (isActive && (minutes > 0 || seconds > 0)) {
@@ -35,16 +44,7 @@ function PomodoroTimer() {
     }
 
     return () => clearInterval(intervalRef.current);
-  }, [isActive, minutes, seconds]);
-
-  const playNotificationSound = () => {
-    // Simple notification (browsers may require user interaction first)
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Pomodoro Timer', {
-        body: 'Time is up!',
-      });
-    }
-  };
+  }, [isActive, minutes, seconds, playNotificationSound]);
 
   const toggleTimer = () => {
     setIsActive(!isActive);

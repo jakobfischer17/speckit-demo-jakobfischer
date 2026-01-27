@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Accessibility', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('[data-testid="app"]', { timeout: 15000 });
   });
 
   test.describe('Keyboard Navigation', () => {

@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Enhanced Productivity Tips', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('[data-testid="app"]', { timeout: 15000 });
     // Navigate to tips section
     await page.click('[href="#tips"]');
     await page.waitForTimeout(500);

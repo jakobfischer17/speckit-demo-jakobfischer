@@ -5,6 +5,8 @@ import ProductivityTips from './components/ProductivityTips'
 import BreathingExercise from './components/BreathingExercise'
 import AudioPlayer from './components/AudioPlayer/AudioPlayer'
 import Statistics from './components/Statistics/Statistics'
+import DailyPlanner from './components/DailyPlanner/DailyPlanner'
+import PrioritizationTools from './components/PrioritizationTools/PrioritizationTools'
 import SectionNav from './components/Navigation/SectionNav'
 import Confetti from './components/Rewards/Confetti'
 import AchievementToast from './components/Rewards/AchievementToast'
@@ -12,6 +14,8 @@ import { useScrollSpy } from './hooks/useScrollSpy'
 
 // Section configuration
 const SECTIONS = [
+  { id: 'today', label: 'Today', icon: '📅' },
+  { id: 'prioritize', label: 'Prioritize', icon: '🎯' },
   { id: 'timer', label: 'Timer', icon: '🍅' },
   { id: 'audio', label: 'Audio', icon: '🎵' },
   { id: 'stats', label: 'Stats', icon: '📊' },
@@ -57,6 +61,14 @@ function App() {
       />
 
       <main className="main-content">
+        <section id="today" className="content-section">
+          <DailyPlanner />
+        </section>
+
+        <section id="prioritize" className="content-section">
+          <PrioritizationTools />
+        </section>
+
         <section id="timer" className="content-section">
           <PomodoroTimer onMilestoneUnlocked={handleMilestoneUnlocked} />
         </section>

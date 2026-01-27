@@ -2,19 +2,19 @@ import { openDB } from 'idb';
 
 /**
  * IndexedDB service for Focus Enhancement Suite.
- * Database: productivity-hub (version 1)
- * Stores: sessions, stats, achievements
+ * Database: productivity-hub (version 2)
+ * Stores: sessions, stats, achievements, tasks, archivedTasks
  */
 
 const DB_NAME = 'productivity-hub';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 /**
  * Initialize and get database connection
  */
 async function getDB() {
   return openDB(DB_NAME, DB_VERSION, {
-    upgrade(db) {
+    upgrade(db, oldVersion) {
       // Sessions store - completed pomodoro records
       if (!db.objectStoreNames.contains('sessions')) {
         const sessionsStore = db.createObjectStore('sessions', { keyPath: 'id' });
@@ -30,6 +30,24 @@ async function getDB() {
       // Achievements store - unlocked milestones
       if (!db.objectStoreNames.contains('achievements')) {
         db.createObjectStore('achievements', { keyPath: 'type' });
+      }
+
+      // NEW in v2: Tasks store - daily planner tasks
+      if (oldVersion < 2) {
+        if (!db.objectStoreNames.contains('tasks')) {
+          const tasksStore = db.createObjectStore('tasks', { keyPath: 'id' });
+          tasksStore.createIndex('byDueDate', 'dueDate');
+          tasksStore.createIndex('byPriority', 'priority');
+          tasksStore.createIndex('byCreatedAt', 'createdAt');
+          tasksStore.createIndex('byCompleted', 'completedAt');
+          tasksStore.createIndex('byManualOrder', 'manualOrder');
+        }
+
+        // NEW in v2: Archived tasks store
+        if (!db.objectStoreNames.contains('archivedTasks')) {
+          const archivedStore = db.createObjectStore('archivedTasks', { keyPath: 'id' });
+          archivedStore.createIndex('byArchivedAt', 'archivedAt');
+        }
       }
     },
   });

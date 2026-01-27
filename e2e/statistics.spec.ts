@@ -4,8 +4,8 @@ import { clearIndexedDB, setupTestDatabase } from './fixtures/test-utils';
 test.describe('Statistics Dashboard', () => {
   test.beforeEach(async ({ page }) => {
     await clearIndexedDB(page);
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('[data-testid="app"]', { timeout: 15000 });
   });
 
   test.describe('Stats Display', () => {

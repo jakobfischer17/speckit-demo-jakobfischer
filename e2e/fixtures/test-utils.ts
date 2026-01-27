@@ -8,9 +8,32 @@ import { test as base, expect, Page } from '@playwright/test';
  * IndexedDB database name used by the app
  */
 const DB_NAME = 'productivity-hub';
+const DB_VERSION = 2;
 
 /**
- * Seed IndexedDB with test data
+ * Task interface for type safety
+ */
+interface Task {
+  id: string;
+  title: string;
+  createdAt: number;
+  updatedAt: number;
+  dueDate: string | null;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  completedAt: number | null;
+  manualOrder: number;
+  eisenhowerQuadrant: string | null;
+  riceScores: {
+    reach: number;
+    impact: number;
+    confidence: number;
+    effort: number;
+    score: number;
+  } | null;
+}
+
+/**
+ * Seed IndexedDB with test data (v2 schema)
  */
 export async function seedIndexedDB(page: Page, data: {
   sessions?: Array<{
@@ -36,12 +59,14 @@ export async function seedIndexedDB(page: Page, data: {
     pomodoroCount: number;
     displayed: boolean;
   }>;
+  tasks?: Task[];
 }) {
-  await page.evaluate(async ({ dbName, data }) => {
-    const request = indexedDB.open(dbName, 1);
+  await page.evaluate(async ({ dbName, dbVersion, data }) => {
+    const request = indexedDB.open(dbName, dbVersion);
     
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
+      const oldVersion = (event as IDBVersionChangeEvent).oldVersion;
       
       if (!db.objectStoreNames.contains('sessions')) {
         const sessionsStore = db.createObjectStore('sessions', { keyPath: 'id' });
@@ -55,6 +80,23 @@ export async function seedIndexedDB(page: Page, data: {
       
       if (!db.objectStoreNames.contains('achievements')) {
         db.createObjectStore('achievements', { keyPath: 'type' });
+      }
+      
+      // v2 additions: tasks and archivedTasks
+      if (oldVersion < 2) {
+        if (!db.objectStoreNames.contains('tasks')) {
+          const tasksStore = db.createObjectStore('tasks', { keyPath: 'id' });
+          tasksStore.createIndex('byDueDate', 'dueDate');
+          tasksStore.createIndex('byPriority', 'priority');
+          tasksStore.createIndex('byCreatedAt', 'createdAt');
+          tasksStore.createIndex('byCompleted', 'completedAt');
+          tasksStore.createIndex('byManualOrder', 'manualOrder');
+        }
+        
+        if (!db.objectStoreNames.contains('archivedTasks')) {
+          const archivedStore = db.createObjectStore('archivedTasks', { keyPath: 'id' });
+          archivedStore.createIndex('byArchivedAt', 'archivedAt');
+        }
       }
     };
 
@@ -99,13 +141,26 @@ export async function seedIndexedDB(page: Page, data: {
           });
         }
         
+        // Seed tasks (v2)
+        if (data.tasks?.length && db.objectStoreNames.contains('tasks')) {
+          const tx = db.transaction('tasks', 'readwrite');
+          const store = tx.objectStore('tasks');
+          for (const task of data.tasks) {
+            store.put(task);
+          }
+          await new Promise<void>((res, rej) => {
+            tx.oncomplete = () => res();
+            tx.onerror = () => rej(tx.error);
+          });
+        }
+        
         db.close();
         resolve();
       };
       
       request.onerror = () => reject(request.error);
     });
-  }, { dbName: DB_NAME, data });
+  }, { dbName: DB_NAME, dbVersion: DB_VERSION, data });
 }
 
 /**
@@ -113,10 +168,13 @@ export async function seedIndexedDB(page: Page, data: {
  */
 export async function clearIndexedDB(page: Page) {
   await page.evaluate(async (dbName) => {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve) => {
       const request = indexedDB.deleteDatabase(dbName);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => resolve(); // Resolve on error to prevent hanging
+      request.onblocked = () => resolve();
+      // Timeout fallback to prevent hanging
+      setTimeout(() => resolve(), 2000);
     });
   }, DB_NAME);
 }
@@ -237,6 +295,57 @@ export function createTestStats(overrides: Partial<{
 }
 
 /**
+ * Create test task object
+ */
+export function createTestTask(overrides: Partial<Task> = {}): Task {
+  const now = Date.now();
+  return {
+    id: overrides.id || crypto.randomUUID(),
+    title: overrides.title || 'Test Task',
+    createdAt: overrides.createdAt || now,
+    updatedAt: overrides.updatedAt || now,
+    dueDate: overrides.dueDate || null,
+    priority: overrides.priority || 'medium',
+    completedAt: overrides.completedAt || null,
+    manualOrder: overrides.manualOrder || 1,
+    eisenhowerQuadrant: overrides.eisenhowerQuadrant || null,
+    riceScores: overrides.riceScores || null,
+  };
+}
+
+/**
+ * Seed tasks via the UI (more reliable than direct DB seeding)
+ */
+export async function addTaskViaUI(page: Page, title: string) {
+  // Navigate to Today section
+  const todaySection = page.locator('#today');
+  await todaySection.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  
+  // Add task via Quick Add
+  const quickAddInput = page.locator('.quick-add__input');
+  await quickAddInput.fill(title);
+  await quickAddInput.press('Enter');
+  
+  // Wait for task to appear
+  await page.locator('.task-item').filter({ hasText: title }).waitFor({ state: 'visible', timeout: 5000 });
+}
+
+/**
+ * Clear the database completely
+ */
+export async function clearDatabaseCompletely(page: Page) {
+  await page.evaluate(() => {
+    return new Promise<void>((resolve) => {
+      const deleteRequest = indexedDB.deleteDatabase('productivity-hub');
+      deleteRequest.onsuccess = () => resolve();
+      deleteRequest.onerror = () => resolve();
+      deleteRequest.onblocked = () => resolve();
+    });
+  });
+}
+
+/**
  * Wait for app to be fully loaded
  */
 export async function waitForAppReady(page: Page) {
@@ -251,6 +360,14 @@ export async function navigateToSection(page: Page, sectionName: string) {
   await page.getByRole('link', { name: new RegExp(sectionName, 'i') }).click();
   // Wait for scroll to complete
   await page.waitForTimeout(500);
+}
+
+/**
+ * Scroll to a section by ID
+ */
+export async function scrollToSection(page: Page, sectionId: string) {
+  await page.locator(`#${sectionId}`).scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
 }
 
 /**

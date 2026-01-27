@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Section Navigation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('[data-testid="app"]');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('[data-testid="app"]', { timeout: 15000 });
   });
 
   test('should display all navigation links', async ({ page }) => {

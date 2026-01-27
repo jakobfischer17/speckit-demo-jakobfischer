@@ -7,9 +7,20 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:smoke": "playwright test e2e/smoke.spec.ts",
+    "test:daily-planner": "playwright test e2e/daily-planner-robust.spec.ts",
+    "test:chromium": "playwright test --project=chromium",
+    "test:report": "playwright show-report"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@tanstack/react-virtual": "^3.13.18",
+    "date-fns": "^4.1.0",
     "idb": "^8.0.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
@@ -17,6 +28,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@playwright/test": "^1.58.0",
+    "@types/node": "^25.0.10",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",

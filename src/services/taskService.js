@@ -1,12 +1,10 @@
 /**
  * Task Service - CRUD operations and multi-tab sync for Daily Planner
- * Uses IndexedDB via db.js and BroadcastChannel for real-time sync
+ * Uses the shared IndexedDB initializer from db.js so task stores always exist.
  */
 
-import { openDB } from 'idb';
+import { getDB } from './db.js';
 
-const DB_NAME = 'productivity-hub';
-const DB_VERSION = 2;
 const BROADCAST_CHANNEL_NAME = 'productivity-hub-tasks';
 
 // BroadcastChannel for multi-tab sync
@@ -46,13 +44,6 @@ export function broadcastTaskChange(event) {
   if (channel) {
     channel.postMessage(event);
   }
-}
-
-/**
- * Get database connection
- */
-async function getDB() {
-  return openDB(DB_NAME, DB_VERSION);
 }
 
 // ============================================

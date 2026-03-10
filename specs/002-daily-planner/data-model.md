@@ -1,437 +1,189 @@
-# Data Model: Daily Planner & Task Management
+# Data Model: Daily Planner Validation & Supporting UX
 
 **Feature**: 002-daily-planner  
-**Date**: 2026-01-27  
-**Storage**: IndexedDB via `idb` wrapper (extend existing `productivity-hub` database)
+**Date**: 2026-03-10  
+**Storage**: IndexedDB via `idb` wrapper for planner data; in-memory runtime state for UI-only focus/breathing selections
 
 ---
 
-## Entity Relationship Diagram
+## Core Domain Entities
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                           Task                                   │
-├─────────────────────────────────────────────────────────────────┤
-│ id: string (UUID)                    [Primary Key]              │
-│ title: string                        [Required, 1-500 chars]    │
-│ createdAt: number                    [Timestamp, indexed]       │
-│ dueDate: number | null               [Timestamp, indexed]       │
-│ priority: 'high' | 'medium' | 'low'  [Default: 'medium', indexed]│
-│ completedAt: number | null           [Timestamp, indexed]       │
-│ manualOrder: number                  [Float for reordering]     │
-│ eisenhowerQuadrant: string | null    [Optional]                 │
-│ riceScores: RICEScores | null        [Optional]                 │
-│ updatedAt: number                    [Timestamp]                │
-├─────────────────────────────────────────────────────────────────┤
-│ Indexes: byDueDate, byPriority, byCreatedAt, byCompleted,       │
-│          byManualOrder                                          │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              │ (after 7 days completed)
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                       ArchivedTask                               │
-├─────────────────────────────────────────────────────────────────┤
-│ id: string (UUID)                    [Primary Key, from Task]   │
-│ title: string                        [From original task]       │
-│ createdAt: number                    [From original task]       │
-│ completedAt: number                  [When completed]           │
-│ archivedAt: number                   [When archived, indexed]   │
-│ priority: string                     [From original task]       │
-│ originalDueDate: number | null       [Preserved for history]    │
-└─────────────────────────────────────────────────────────────────┘
+### Task
 
-┌─────────────────────────────────────────────────────────────────┐
-│                       RICEScores (embedded)                      │
-├─────────────────────────────────────────────────────────────────┤
-│ reach: number                        [1-10]                     │
-│ impact: number                       [1-5]                      │
-│ confidence: number                   [0.1-1.0]                  │
-│ effort: number                       [1-10, minimum 1]          │
-│ score: number                        [Computed: R*I*C/E]        │
-│ updatedAt: number                    [When last scored]         │
-└─────────────────────────────────────────────────────────────────┘
+Represents a single actionable planner item.
 
-┌─────────────────────────────────────────────────────────────────┐
-│                    Top3Focus (runtime only)                      │
-├─────────────────────────────────────────────────────────────────┤
-│ taskIds: string[]                    [3 task IDs]               │
-│ generatedAt: number                  [Timestamp]                │
-│ dismissedIds: string[]               [User-dismissed tasks]     │
-└─────────────────────────────────────────────────────────────────┘
-```
+| Field | Type | Rules |
+|------|------|-------|
+| `id` | string | UUID, immutable |
+| `title` | string | Required, trimmed, 1-500 chars |
+| `createdAt` | number | Unix ms timestamp, immutable |
+| `updatedAt` | number | Unix ms timestamp, auto-updated |
+| `dueDate` | number \| null | Defaults to end-of-day for quick-add |
+| `priority` | `'high' \| 'medium' \| 'low'` | Default `'medium'` |
+| `completedAt` | number \| null | Null for active tasks |
+| `manualOrder` | number | Fractional ordering value |
+| `eisenhowerQuadrant` | `'do-first' \| 'schedule' \| 'delegate' \| 'eliminate' \| null` | Optional, drives priority |
+| `riceScores` | `RICEScores \| null` | Optional |
+
+**Relationships**
+
+- A Task may have zero or one `RICEScores` value object.
+- A completed Task may later transition into an `ArchivedTask`.
+- A Task may appear in a generated `Top3FocusSet`.
+
+**Validation Rules**
+
+- Empty or whitespace-only titles are invalid.
+- `createdAt` must remain unchanged after creation.
+- `manualOrder` must always be sortable and gap-tolerant.
+- `completedAt` toggles whether the task belongs to active or completed collections.
 
 ---
 
-## Task Entity
+### RICEScores
 
-### Schema Definition
+Embedded prioritization metrics stored on a task.
 
-```typescript
-interface Task {
-  // Identity
-  id: string;                    // UUID v4, generated on creation
-  
-  // Core fields
-  title: string;                 // 1-500 characters, trimmed
-  createdAt: number;             // Unix timestamp (ms)
-  updatedAt: number;             // Unix timestamp (ms), auto-updated
-  
-  // Scheduling
-  dueDate: number | null;        // Unix timestamp (ms), nullable
-  
-  // Prioritization
-  priority: 'high' | 'medium' | 'low';  // Default: 'medium'
-  eisenhowerQuadrant: 'do-first' | 'schedule' | 'delegate' | 'eliminate' | null;
-  riceScores: RICEScores | null;
-  
-  // Status
-  completedAt: number | null;    // Unix timestamp when completed, null if active
-  
-  // Ordering
-  manualOrder: number;           // Float for fractional ordering
-}
-```
-
-### Field Validations
-
-| Field | Validation Rules |
-|-------|-----------------|
-| `id` | UUID v4 format, immutable after creation |
-| `title` | Non-empty, 1-500 chars, trimmed whitespace |
-| `createdAt` | Immutable after creation |
-| `dueDate` | Must be valid timestamp or null; no past date restriction |
-| `priority` | Enum: 'high', 'medium', 'low' |
-| `eisenhowerQuadrant` | Enum or null; setting quadrant updates priority |
-| `completedAt` | null (active) or valid timestamp (completed) |
-| `manualOrder` | Positive float; recalculated on reorder |
-
-### Priority-Quadrant Mapping
-
-```javascript
-const QUADRANT_PRIORITY_MAP = {
-  'do-first': 'high',      // Urgent + Important
-  'schedule': 'medium',    // Important, not urgent
-  'delegate': 'low',       // Urgent, not important
-  'eliminate': 'low',      // Neither urgent nor important
-};
-```
+| Field | Type | Rules |
+|------|------|-------|
+| `reach` | number | 1-10 |
+| `impact` | number | 1-5 |
+| `confidence` | number | 0.1-1.0 |
+| `effort` | number | Minimum 1 |
+| `score` | number | Computed as `(reach * impact * confidence) / effort` |
+| `updatedAt` | number | Unix ms timestamp |
 
 ---
 
-## RICE Scores Entity (Embedded)
+### ArchivedTask
 
-```typescript
-interface RICEScores {
-  reach: number;        // 1-10: How many people/uses affected
-  impact: number;       // 1-5: Minimal(1) to Massive(5)
-  confidence: number;   // 0.1-1.0: 10%-100% certainty
-  effort: number;       // 1-10: Person-days (minimum 1)
-  score: number;        // Computed: (reach * impact * confidence) / effort
-  updatedAt: number;    // Timestamp of last score update
-}
-```
+Historical representation of a completed task moved out of the active planner after the retention window.
 
-### Computed Score Formula
+| Field | Type | Rules |
+|------|------|-------|
+| `id` | string | Same identifier as original task |
+| `title` | string | Preserved from task |
+| `createdAt` | number | Preserved from task |
+| `completedAt` | number | Required |
+| `archivedAt` | number | Unix ms timestamp |
+| `priority` | string | Preserved from task |
+| `originalDueDate` | number \| null | Preserved from task |
 
-```javascript
-function computeRICEScore(scores) {
-  const { reach, impact, confidence, effort } = scores;
-  return (reach * impact * confidence) / Math.max(effort, 1);
-}
-```
+**State Transition**
+
+- `Task (completedAt != null)` -> `ArchivedTask` after 7 days via `archiveOldTasks()`.
 
 ---
 
-## Archived Task Entity
+### Top3FocusSet
 
-```typescript
-interface ArchivedTask {
-  id: string;              // Original task ID preserved
-  title: string;           // Original title
-  createdAt: number;       // Original creation date
-  completedAt: number;     // When marked complete
-  archivedAt: number;      // When moved to archive (7 days after completion)
-  priority: string;        // Original priority at completion
-  originalDueDate: number | null;  // Original due date preserved
-}
-```
+Runtime-only selection representing the current top-three recommendation set.
 
-### Archive Trigger
+| Field | Type | Rules |
+|------|------|-------|
+| `taskIds` | string[] | Up to 3 active task IDs |
+| `generatedAt` | number | Unix ms timestamp |
+| `dismissedIds` | string[] | Tracks replacements within the same generation window |
 
-Tasks are archived automatically when:
-```javascript
-const ARCHIVE_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+**Selection Order**
 
-function shouldArchive(task) {
-  if (!task.completedAt) return false;
-  const age = Date.now() - task.completedAt;
-  return age >= ARCHIVE_THRESHOLD_MS;
-}
-```
+- Overdue tasks
+- Due today
+- Due this week
+- Higher priority
+- Older creation date as final tie-breaker
 
 ---
 
-## IndexedDB Schema
+## Runtime Interaction Entities
 
-### Database Configuration
+### TaskBroadcastEvent
 
-```javascript
-const DB_NAME = 'productivity-hub';
-const DB_VERSION = 2;  // Upgraded from 1
-```
+Represents a cross-tab synchronization message emitted through BroadcastChannel.
 
-### Object Stores
+| Field | Type | Rules |
+|------|------|-------|
+| `type` | string | One of `TASK_CREATED`, `TASK_UPDATED`, `TASK_DELETED`, `TASKS_REORDERED`, `FULL_SYNC` |
+| `task` | Task \| undefined | Present for create/update |
+| `taskId` | string \| undefined | Present for delete |
+| `taskIds` | string[] \| undefined | Present for reorder |
+| `tasks` | Task[] \| undefined | Present for full sync |
 
-```javascript
-upgrade(db, oldVersion) {
-  // Existing stores from v1 (preserved)
-  // - sessions
-  // - stats  
-  // - achievements
+**Validation Rules**
 
-  if (oldVersion < 2) {
-    // NEW: Tasks store
-    const tasksStore = db.createObjectStore('tasks', { keyPath: 'id' });
-    tasksStore.createIndex('byDueDate', 'dueDate');
-    tasksStore.createIndex('byPriority', 'priority');
-    tasksStore.createIndex('byCreatedAt', 'createdAt');
-    tasksStore.createIndex('byCompleted', 'completedAt');
-    tasksStore.createIndex('byManualOrder', 'manualOrder');
-    
-    // NEW: Archived tasks store
-    const archiveStore = db.createObjectStore('archivedTasks', { keyPath: 'id' });
-    archiveStore.createIndex('byArchivedAt', 'archivedAt');
-  }
-}
-```
-
-### Index Usage
-
-| Operation | Index Used |
-|-----------|-----------|
-| Get today's tasks | `byDueDate` with range query |
-| Sort by priority | `byPriority` |
-| Sort by creation | `byCreatedAt` |
-| Get completed tasks | `byCompleted` with range for 7-day window |
-| Manual ordering | `byManualOrder` |
-| Archive history | `byArchivedAt` for pagination |
+- Payload shape must match event type.
+- Consumers must ignore unknown event types safely.
+- Reorder/full-sync events may trigger a storage refresh instead of optimistic merge.
 
 ---
 
-## Manual Order Strategy
+### BreathingRoutine
 
-### Fractional Indexing
+Declarative configuration for one breathing exercise mode.
 
-Uses fractional values for O(1) reordering without shifting all items:
+| Field | Type | Rules |
+|------|------|-------|
+| `key` | `'box' \| 'relax' \| 'energize'` | Unique routine id |
+| `name` | string | User-facing label |
+| `description` | string | Explains the pacing/visual cue |
+| `visual` | `'box' \| 'relax' \| 'energize'` | Determines visual renderer |
+| `phases` | `BreathingPhase[]` | Non-empty ordered list |
 
-```javascript
-// Initial order: 1.0, 2.0, 3.0, 4.0
-// Move task 4 between 1 and 2:
-// New order: 1.0, 1.5, 2.0, 3.0
+### BreathingPhase
 
-function calculateNewOrder(beforeOrder, afterOrder) {
-  if (beforeOrder === null) return afterOrder - 1;  // Insert at start
-  if (afterOrder === null) return beforeOrder + 1;  // Insert at end
-  return (beforeOrder + afterOrder) / 2;            // Insert between
-}
-```
+| Field | Type | Rules |
+|------|------|-------|
+| `name` | `'inhale' \| 'hold' \| 'exhale'` | Phase type |
+| `duration` | number | Whole seconds, > 0 |
+| `instruction` | string | User-facing cue |
 
-### Rebalancing
+### BreathingSessionState
 
-When precision becomes a concern (many insertions between same items):
+Runtime UI state for the breathing component.
 
-```javascript
-// Rebalance when gap < 0.0001
-function shouldRebalance(gap) {
-  return gap < 0.0001;
-}
+| Field | Type | Rules |
+|------|------|-------|
+| `exerciseType` | string | Active routine key |
+| `isActive` | boolean | Interval running or paused |
+| `currentPhaseIndex` | number | Valid index within routine phases |
+| `seconds` | number | Elapsed seconds inside current phase |
 
-function rebalanceOrders(tasks) {
-  return tasks.map((task, index) => ({
-    ...task,
-    manualOrder: (index + 1) * 1.0,
-  }));
-}
-```
+**State Transitions**
 
----
-
-## State Transitions
-
-### Task Lifecycle
-
-```
-                    ┌──────────────┐
-                    │   Created    │
-                    │ (active)     │
-                    └──────┬───────┘
-                           │
-          ┌────────────────┼────────────────┐
-          │                │                │
-          ▼                ▼                ▼
-    ┌──────────┐    ┌──────────┐    ┌──────────┐
-    │  Edited  │    │ Reordered │   │ Deleted  │
-    │          │    │           │   │ (5s undo)│
-    └────┬─────┘    └─────┬─────┘   └────┬─────┘
-         │                │              │
-         └────────────────┼──────────────┘
-                          │
-                          ▼
-                    ┌──────────────┐
-                    │  Completed   │
-                    │ (7-day vis)  │
-                    └──────┬───────┘
-                           │
-                           │ (after 7 days)
-                           ▼
-                    ┌──────────────┐
-                    │   Archived   │
-                    │ (history)    │
-                    └──────────────┘
-```
-
-### Priority Transitions via Eisenhower
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   Eisenhower Matrix                          │
-├──────────────────────┬──────────────────────────────────────┤
-│                      │         IMPORTANT                     │
-│                      ├─────────────────┬────────────────────┤
-│                      │      Yes        │       No           │
-├──────────────────────┼─────────────────┼────────────────────┤
-│ U  │    Yes          │   DO FIRST      │    DELEGATE        │
-│ R  │                 │   → high        │    → low           │
-│ G  ├─────────────────┼─────────────────┼────────────────────┤
-│ E  │    No           │   SCHEDULE      │    ELIMINATE       │
-│ N  │                 │   → medium      │    → low           │
-│ T  │                 │                 │                    │
-└────┴─────────────────┴─────────────────┴────────────────────┘
-```
+- `paused` -> `active` when Start is pressed.
+- `active` -> next phase when `seconds === duration - 1`.
+- Routine change resets `isActive`, `currentPhaseIndex`, and `seconds` to initial state.
 
 ---
 
-## Sample Data
+## Storage Schema Notes
 
-### Task Example
+### IndexedDB Stores
 
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "title": "Review quarterly report",
-  "createdAt": 1706313600000,
-  "updatedAt": 1706313600000,
-  "dueDate": 1706400000000,
-  "priority": "high",
-  "eisenhowerQuadrant": "do-first",
-  "riceScores": null,
-  "completedAt": null,
-  "manualOrder": 1.0
-}
-```
+- `sessions`
+- `stats`
+- `achievements`
+- `tasks`
+- `archivedTasks`
 
-### Task with RICE Scores
+### Task Indexes
 
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440001",
-  "title": "Implement user feedback feature",
-  "createdAt": 1706227200000,
-  "updatedAt": 1706313600000,
-  "dueDate": null,
-  "priority": "medium",
-  "eisenhowerQuadrant": "schedule",
-  "riceScores": {
-    "reach": 8,
-    "impact": 4,
-    "confidence": 0.8,
-    "effort": 5,
-    "score": 5.12,
-    "updatedAt": 1706313600000
-  },
-  "completedAt": null,
-  "manualOrder": 2.0
-}
-```
+- `byDueDate`
+- `byPriority`
+- `byCreatedAt`
+- `byCompleted`
+- `byManualOrder`
 
-### Archived Task Example
+### Archived Task Indexes
 
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440002",
-  "title": "Send meeting notes",
-  "createdAt": 1705622400000,
-  "completedAt": 1705708800000,
-  "archivedAt": 1706313600000,
-  "priority": "low",
-  "originalDueDate": 1705708800000
-}
-```
+- `byArchivedAt`
 
 ---
 
-## Query Patterns
+## Test-Relevant Invariants
 
-### Get Today's Tasks
-
-```javascript
-async function getTodaysTasks() {
-  const db = await getDB();
-  const startOfDay = getStartOfDay(Date.now());
-  const endOfDay = startOfDay + 24 * 60 * 60 * 1000 - 1;
-  
-  const range = IDBKeyRange.bound(startOfDay, endOfDay);
-  const byDueDate = await db.getAllFromIndex('tasks', 'byDueDate', range);
-  
-  // Also include overdue tasks
-  const overdueRange = IDBKeyRange.upperBound(startOfDay - 1);
-  const overdue = await db.getAllFromIndex('tasks', 'byDueDate', overdueRange);
-  
-  return [...overdue, ...byDueDate].filter(t => !t.completedAt);
-}
-```
-
-### Get Completed Tasks (7-day window)
-
-```javascript
-async function getCompletedTasks() {
-  const db = await getDB();
-  const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-  
-  const range = IDBKeyRange.lowerBound(sevenDaysAgo);
-  return db.getAllFromIndex('tasks', 'byCompleted', range);
-}
-```
-
-### Archive Old Completed Tasks
-
-```javascript
-async function archiveOldTasks() {
-  const db = await getDB();
-  const threshold = Date.now() - (7 * 24 * 60 * 60 * 1000);
-  
-  const range = IDBKeyRange.upperBound(threshold);
-  const toArchive = await db.getAllFromIndex('tasks', 'byCompleted', range);
-  
-  const tx = db.transaction(['tasks', 'archivedTasks'], 'readwrite');
-  
-  for (const task of toArchive) {
-    if (task.completedAt) {
-      const archived = {
-        id: task.id,
-        title: task.title,
-        createdAt: task.createdAt,
-        completedAt: task.completedAt,
-        archivedAt: Date.now(),
-        priority: task.priority,
-        originalDueDate: task.dueDate,
-      };
-      await tx.objectStore('archivedTasks').put(archived);
-      await tx.objectStore('tasks').delete(task.id);
-    }
-  }
-  
-  await tx.done;
-}
-```
+- Legacy databases must upgrade before any task CRUD call runs.
+- Task creation defaults to today's due date and medium priority unless specified otherwise.
+- Completed tasks move out of the active list but remain visible in a completed collection until archived.
+- Undo-delete restores the original task payload if the timeout window has not elapsed.
+- Breathing countdown and phase transitions must be deterministic under mocked timers.

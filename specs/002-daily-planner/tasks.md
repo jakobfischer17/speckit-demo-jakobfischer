@@ -1,207 +1,216 @@
-# Tasks: Daily Planner & Task Management
+# Tasks: Daily Planner Validation & Experience Completion
 
 **Input**: Design documents from `/specs/002-daily-planner/`  
-**Prerequisites**: plan.md ✓, spec.md ✓, research.md ✓, data-model.md ✓, contracts/components.md ✓
+**Prerequisites**: plan.md (required), spec.md (required), research.md, data-model.md, contracts/components.md, quickstart.md
 
-**Tests**: Test tasks are NOT included (not explicitly requested). Add E2E tests in Polish phase.
+**Tests**: Test tasks are included because the feature specification requires independent validation per story and the implementation plan explicitly replaces the broken browser-driven suite with deterministic component and service tests.
 
-**Organization**: Tasks grouped by user story to enable independent implementation and testing.
+**Organization**: Tasks are grouped by user story so each story can be implemented, validated, and delivered independently.
 
 ## Format: `[ID] [P?] [Story] Description`
 
-- **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (US1-US8)
-- Include exact file paths in descriptions
+- **[P]**: Can run in parallel (different files, no dependencies on incomplete tasks)
+- **[Story]**: Which user story this task belongs to (`[US1]` to `[US8]`)
+- Every task includes the exact file path it changes
 
 ---
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Project initialization, dependencies, and database schema
+**Purpose**: Finalize the cross-platform Vitest-based test stack and repo-level validation entrypoints.
 
-- [x] T001 Install new dependencies: `npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities @tanstack/react-virtual date-fns`
-- [x] T002 [P] Create priority config data in src/data/priorityConfig.js (Eisenhower mapping, RICE formula)
-- [x] T003 [P] Extend database schema in src/services/db.js (add tasks + archivedTasks stores, upgrade to v2)
-- [x] T004 Create task service layer in src/services/taskService.js (CRUD operations, multi-tab sync via BroadcastChannel)
-- [x] T005 [P] Create directory structure: src/components/DailyPlanner/, src/components/PrioritizationTools/, src/components/TaskHistory/
+- [ ] T001 Update Vitest scripts for full, watch, and planner-focused runs in package.json
+- [ ] T002 [P] Configure jsdom-based test execution in vite.config.js
+- [ ] T003 [P] Finalize shared test environment mocks and cleanup in vitest.setup.js
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: Core hooks and navigation that ALL user stories depend on
+**Purpose**: Complete the shared persistence and state foundations that all planner stories depend on.
 
-**⚠️ CRITICAL**: No user story work can begin until this phase is complete
+**⚠️ CRITICAL**: No user story work should start until this phase is complete.
 
-- [x] T006 Implement useTasks hook in src/hooks/useTasks.js (task state, CRUD actions, pending delete with undo, BroadcastChannel sync)
-- [x] T007 [P] Implement useTaskSort hook in src/hooks/useTaskSort.js (sortBy, sortDirection, sortedTasks function)
-- [x] T008 [P] Implement useDragAndDrop hook in src/hooks/useDragAndDrop.js (dnd-kit sensors, drag handlers, keyboard support)
-- [x] T009 [P] Implement useTop3Focus hook in src/hooks/useTop3Focus.js (generate, dismiss, deadline-first algorithm)
-- [x] T010 [P] Implement useTaskArchive hook in src/hooks/useTaskArchive.js (7-day retention, archive logic)
-- [x] T011 Extend SectionNav in src/components/Navigation/SectionNav.jsx (add Today, Prioritization Tools links)
+- [ ] T004 Export and stabilize the shared IndexedDB initializer in src/services/db.js
+- [ ] T005 Refactor planner persistence to use the shared DB initializer in src/services/taskService.js
+- [ ] T006 [P] Add legacy IndexedDB upgrade regression coverage in src/services/taskService.test.js
+- [ ] T007 [P] Normalize broadcast reconciliation, load state, and undo bookkeeping in src/hooks/useTasks.js
 
-**Checkpoint**: Foundation ready - user story implementation can now begin
+**Checkpoint**: The storage, sync, and test foundation is stable enough for story-level work.
 
 ---
 
 ## Phase 3: User Story 1 - Frictionless Today View (Priority: P1) 🎯 MVP
 
-**Goal**: Users see a clean Today dashboard immediately on app load with current date and task summary
+**Goal**: Users land on a stable Today view that immediately shows the date, summary state, and active tasks without planner errors.
 
-**Independent Test**: Load app → verify Today section visible → verify current date displayed → verify task list appears
+**Independent Test**: Load the app and verify the Today section renders the current date, an empty or populated task summary, and an active task list without requiring navigation or refresh.
+
+### Tests for User Story 1
+
+- [ ] T008 [P] [US1] Add Today view render and empty-state coverage in src/components/DailyPlanner/DailyPlanner.test.jsx
 
 ### Implementation for User Story 1
 
-- [x] T012 [P] [US1] Create DailyPlanner.jsx root component in src/components/DailyPlanner/DailyPlanner.jsx
-- [x] T013 [P] [US1] Create DailyPlanner.css styles in src/components/DailyPlanner/DailyPlanner.css
-- [x] T014 [P] [US1] Create TodayView.jsx component in src/components/DailyPlanner/TodayView.jsx (date header, task count, empty state)
-- [x] T015 [P] [US1] Create TodayView.css styles in src/components/DailyPlanner/TodayView.css
-- [x] T016 [P] [US1] Create TaskList.jsx component in src/components/DailyPlanner/TaskList.jsx (list container with virtualization-ready structure; actual useVirtualizer enabled in T054 when >50 tasks)
-- [x] T017 [P] [US1] Create TaskList.css styles in src/components/DailyPlanner/TaskList.css
-- [x] T018 [P] [US1] Create TaskItem.jsx component in src/components/DailyPlanner/TaskItem.jsx (checkbox, title, priority badge)
-- [x] T019 [P] [US1] Create TaskItem.css styles in src/components/DailyPlanner/TaskItem.css
-- [x] T020 [US1] Integrate DailyPlanner section into src/App.jsx (add as new scrollable section)
+- [ ] T009 [US1] Refine current-date and summary rendering in src/components/DailyPlanner/TodayView.jsx
+- [ ] T010 [US1] Align planner section composition and loading behavior in src/components/DailyPlanner/DailyPlanner.jsx
+- [ ] T011 [US1] Tighten active/completed list separation in src/components/DailyPlanner/TaskList.jsx
 
-**Checkpoint**: Today View displays with date and task list - User Story 1 testable independently
+**Checkpoint**: User Story 1 works independently as the entry-point planner experience.
 
 ---
 
-## Phase 4: User Story 2 - Quick Task Creation (Priority: P1) 🎯 MVP
+## Phase 4: User Story 2 - Quick Task Creation (Priority: P1)
 
-**Goal**: Users can type + Enter to instantly add tasks without modals or forms; users can edit existing tasks inline
+**Goal**: Users can capture tasks instantly and edit them inline with predictable defaults.
 
-**Independent Test**: Type in quick-add → press Enter → verify task appears in <200ms → verify default today date + medium priority → click task title → verify inline edit works
+**Independent Test**: Type a task into quick add, press Enter, verify it appears with default today/medium metadata, then click the title and save an inline edit successfully.
+
+### Tests for User Story 2
+
+- [ ] T012 [P] [US2] Add quick-add and inline-edit coverage in src/components/DailyPlanner/DailyPlanner.test.jsx
 
 ### Implementation for User Story 2
 
-- [x] T021 [P] [US2] Create QuickAdd.jsx component in src/components/DailyPlanner/QuickAdd.jsx (input field, Enter/Escape handlers)
-- [x] T022 [P] [US2] Create QuickAdd.css styles in src/components/DailyPlanner/QuickAdd.css (prominent, always-visible input)
-- [x] T023 [US2] Integrate QuickAdd into TodayView in src/components/DailyPlanner/TodayView.jsx (wire to createTask action)
-- [x] T024 [US2] Add inline edit to TaskItem in src/components/DailyPlanner/TaskItem.jsx (click-to-edit title, FR-029)
+- [ ] T013 [US2] Finalize Enter/Escape quick-add behavior in src/components/DailyPlanner/QuickAdd.jsx
+- [ ] T014 [US2] Finalize accessible inline title editing in src/components/DailyPlanner/TaskItem.jsx
+- [ ] T015 [US2] Enforce default due-date and priority creation behavior in src/hooks/useTasks.js
 
-**Checkpoint**: Quick task creation AND inline editing work - Users can add and edit tasks frictionlessly
+**Checkpoint**: User Story 2 works independently as a frictionless capture/edit flow.
 
 ---
 
-## Phase 5: User Story 3 - Task Completion (Priority: P1) 🎯 MVP
+## Phase 5: User Story 3 - Task Completion (Priority: P1)
 
-**Goal**: Users can check off tasks with satisfying animation; completed tasks remain visible; users can delete tasks with undo
+**Goal**: Users can complete, restore, delete, and undo-delete tasks with stable feedback.
 
-**Independent Test**: Click checkbox → verify strike-through animation → verify task moves to completed section → verify uncheck restores → delete task → verify 5-second undo toast
+**Independent Test**: Complete a task, verify it moves into the completed section with visual feedback, restore it, then delete it and undo within the toast window.
+
+### Tests for User Story 3
+
+- [ ] T016 [P] [US3] Add completion, delete, and undo regression coverage in src/components/DailyPlanner/DailyPlanner.test.jsx
 
 ### Implementation for User Story 3
 
-- [x] T025 [US3] Add completion animation to TaskItem in src/components/DailyPlanner/TaskItem.jsx (toggleComplete handler, visual states)
-- [x] T026 [US3] Add completion CSS animations in src/components/DailyPlanner/TaskItem.css (strike-through, fade, 200-300ms)
-- [x] T027 [P] [US3] Create CompletedSection.jsx component in src/components/DailyPlanner/CompletedSection.jsx (completed tasks list)
-- [x] T028 [P] [US3] Create CompletedSection.css styles in src/components/DailyPlanner/CompletedSection.css
-- [x] T029 [US3] Integrate CompletedSection into DailyPlanner in src/components/DailyPlanner/DailyPlanner.jsx
-- [x] T030 [US3] Add delete with undo to TaskItem in src/components/DailyPlanner/TaskItem.jsx (trash icon, hover reveal on desktop, 5-second undo toast, FR-030/FR-031)
+- [ ] T017 [US3] Finalize completed-task rendering and summary behavior in src/components/DailyPlanner/CompletedSection.jsx
+- [ ] T018 [US3] Finalize completion-state styling and delete affordance motion in src/components/DailyPlanner/TaskItem.css
+- [ ] T019 [US3] Stabilize undo timeout visibility and messaging in src/components/DailyPlanner/UndoToast.jsx
+- [ ] T020 [US3] Finalize optimistic delete and restore behavior in src/hooks/useTasks.js
 
-**Checkpoint**: Task completion AND deletion flow works - P1 user stories complete (MVP ready!)
+**Checkpoint**: User Story 3 works independently and completes the P1 MVP loop.
 
 ---
 
 ## Phase 6: User Story 4 - Manual Task Reordering (Priority: P2)
 
-**Goal**: Users can drag tasks to reorder with smooth animations and keyboard support
+**Goal**: Users can reorder tasks manually with pointer and keyboard support while preserving persistent order.
 
-**Independent Test**: Drag task → verify lift effect → verify insertion indicator → drop → verify persisted order
+**Independent Test**: Reorder a task with drag or keyboard controls, refresh/reload state, and verify the chosen manual order persists.
+
+### Tests for User Story 4
+
+- [ ] T021 [P] [US4] Add manual reorder regression coverage in src/hooks/useTasks.test.js
 
 ### Implementation for User Story 4
 
-- [x] T031 [US4] Add drag-and-drop context to TaskList in src/components/DailyPlanner/TaskList.jsx (DndContext, SortableContext)
-- [x] T032 [US4] Make TaskItem sortable in src/components/DailyPlanner/TaskItem.jsx (useSortable hook integration)
-- [x] T033 [US4] Add drag styles in src/components/DailyPlanner/TaskItem.css (lift effect, shadow, insertion indicator)
-- [x] T034 [US4] Implement fractional indexing in src/services/taskService.js (manualOrder calculation on reorder)
+- [ ] T022 [US4] Finalize drag sensor and keyboard reorder flow in src/hooks/useDragAndDrop.js
+- [ ] T023 [US4] Finalize sortable list behavior and insertion handling in src/components/DailyPlanner/TaskList.jsx
+- [ ] T024 [US4] Harden fractional manual-order persistence in src/services/taskService.js
 
-**Checkpoint**: Drag-and-drop reordering works with 60fps animations
+**Checkpoint**: User Story 4 works independently for personal ordering control.
 
 ---
 
 ## Phase 7: User Story 5 - Task Sorting Options (Priority: P2)
 
-**Goal**: Users can sort by priority, due date, or creation time with smooth reordering
+**Goal**: Users can switch between manual, priority, due-date, creation-date, and RICE-aware sorting with clear UI feedback.
 
-**Independent Test**: Select sort option → verify list reorders → verify current sort indicated → verify manual order warning
+**Independent Test**: Apply each sort mode, confirm the list order changes correctly, and verify the active mode is visibly indicated.
+
+### Tests for User Story 5
+
+- [ ] T025 [P] [US5] Add sort-mode coverage in src/hooks/useTaskSort.test.js
 
 ### Implementation for User Story 5
 
-- [x] T035 [P] [US5] Create SortControls.jsx component in src/components/DailyPlanner/SortControls.jsx (dropdown, active indicator)
-- [x] T036 [P] [US5] Create SortControls.css styles in src/components/DailyPlanner/SortControls.css
-- [x] T037 [US5] Integrate SortControls with TaskList in src/components/DailyPlanner/DailyPlanner.jsx (wire to useTaskSort)
-- [x] T038 [US5] Add sort transition animation in src/components/DailyPlanner/TaskList.css (smooth reorder on sort change)
+- [ ] T026 [US5] Finalize sort mode logic and warning behavior in src/hooks/useTaskSort.js
+- [ ] T027 [US5] Finalize sort controls UI and active-sort indication in src/components/DailyPlanner/SortControls.jsx
+- [ ] T028 [US5] Integrate sort state with planner rendering in src/components/DailyPlanner/DailyPlanner.jsx
 
-**Checkpoint**: All sorting options work - P2 user stories complete
+**Checkpoint**: User Story 5 works independently as a flexible task viewing layer.
 
 ---
 
 ## Phase 8: User Story 6 - Eisenhower Matrix View (Priority: P3)
 
-**Goal**: Users can view tasks in a 2x2 matrix and drag between quadrants to set priority
+**Goal**: Users can classify tasks into quadrants and have planner priorities update accordingly.
 
-**Independent Test**: Open Prioritization Tools → verify 4 quadrants displayed → drag task to new quadrant → verify priority updated
+**Independent Test**: Open the matrix, move tasks between staging/quadrants, and verify quadrant assignment changes the resulting priority.
+
+### Tests for User Story 6
+
+- [ ] T029 [P] [US6] Add Eisenhower matrix interaction coverage in src/components/PrioritizationTools/PrioritizationTools.test.jsx
 
 ### Implementation for User Story 6
 
-- [x] T039 [P] [US6] Create PrioritizationTools.jsx root component in src/components/PrioritizationTools/PrioritizationTools.jsx
-- [x] T040 [P] [US6] Create PrioritizationTools.css styles in src/components/PrioritizationTools/PrioritizationTools.css
-- [x] T041 [P] [US6] Create EisenhowerMatrix.jsx component in src/components/PrioritizationTools/EisenhowerMatrix.jsx (4 quadrants, staging area)
-- [x] T042 [P] [US6] Create EisenhowerMatrix.css styles in src/components/PrioritizationTools/EisenhowerMatrix.css (2x2 grid layout)
-- [x] T043 [US6] Implement quadrant drag-drop in src/components/PrioritizationTools/EisenhowerMatrix.jsx (cross-quadrant drag, priority mapping)
-- [x] T044 [US6] Integrate PrioritizationTools section into src/App.jsx (add as new scrollable section)
+- [ ] T030 [US6] Finalize quadrant assignment and staging behavior in src/components/PrioritizationTools/EisenhowerMatrix.jsx
+- [ ] T031 [US6] Finalize quadrant-to-priority constants in src/data/priorityConfig.js
+- [ ] T032 [US6] Enforce quadrant-driven priority persistence in src/services/taskService.js
+- [ ] T033 [US6] Integrate matrix state and section wiring in src/components/PrioritizationTools/PrioritizationTools.jsx
 
-**Checkpoint**: Eisenhower Matrix works with drag-and-drop categorization
+**Checkpoint**: User Story 6 works independently as a prioritization framework.
 
 ---
 
 ## Phase 9: User Story 7 - Top 3 Focus Generator (Priority: P3)
 
-**Goal**: Users can generate 3 suggested focus tasks based on urgency/deadlines with dismissal
+**Goal**: Users can generate and adjust a focused top-three set based on deadlines and priority.
 
-**Independent Test**: Click "Generate Top 3" with 5+ tasks → verify 3 tasks highlighted → dismiss one → verify replacement suggested
+**Independent Test**: Generate a Top 3 set from several tasks, dismiss one focus item, and verify a replacement is surfaced without breaking the ranking rules.
+
+### Tests for User Story 7
+
+- [ ] T034 [P] [US7] Extend prioritization coverage for Top 3 generation and dismissal in src/components/PrioritizationTools/PrioritizationTools.test.jsx
 
 ### Implementation for User Story 7
 
-- [x] T045 [P] [US7] Create TopThreeFocus.jsx component in src/components/PrioritizationTools/TopThreeFocus.jsx (generate button, focus cards)
-- [x] T046 [P] [US7] Create TopThreeFocus.css styles in src/components/PrioritizationTools/TopThreeFocus.css (focus card styling)
-- [x] T047 [US7] Integrate Top 3 display into TodayView in src/components/DailyPlanner/TodayView.jsx (special focus section at top, shown after generation)
-- [x] T048 [US7] Add Top 3 to PrioritizationTools section in src/components/PrioritizationTools/PrioritizationTools.jsx
+- [ ] T035 [US7] Finalize deadline-first ranking and replacement logic in src/hooks/useTop3Focus.js
+- [ ] T036 [US7] Finalize Top 3 generation and dismissal UI in src/components/PrioritizationTools/TopThreeFocus.jsx
+- [ ] T037 [US7] Surface focus cards in the Today view in src/components/DailyPlanner/TodayView.jsx
 
-**Checkpoint**: Top 3 Focus generator works - P3 user stories complete
+**Checkpoint**: User Story 7 works independently as a decision-support layer.
 
 ---
 
 ## Phase 10: User Story 8 - RICE Scoring Tool (Priority: P4)
 
-**Goal**: Users can input RICE scores for tasks and see calculated priority scores
+**Goal**: Users can score tasks with RICE inputs and use that score in planner ranking and display.
 
-**Independent Test**: Open RICE tool → input R/I/C/E values → verify score calculated → verify sort by RICE works
+**Independent Test**: Enter RICE values for tasks, verify score calculation updates immediately, and confirm RICE sort/badge behavior reflects those scores.
+
+### Tests for User Story 8
+
+- [ ] T038 [P] [US8] Extend prioritization coverage for RICE scoring in src/components/PrioritizationTools/PrioritizationTools.test.jsx
 
 ### Implementation for User Story 8
 
-- [x] T049 [P] [US8] Create RiceScoring.jsx component in src/components/PrioritizationTools/RiceScoring.jsx (score inputs, calculation display)
-- [x] T050 [P] [US8] Create RiceScoring.css styles in src/components/PrioritizationTools/RiceScoring.css
-- [x] T051 [US8] Add RICE badge to TaskItem in src/components/DailyPlanner/TaskItem.jsx (optional score display)
-- [x] T052 [US8] Add RICE sort option to useTaskSort in src/hooks/useTaskSort.js (sort by calculated score)
-- [x] T053 [US8] Integrate RiceScoring into PrioritizationTools in src/components/PrioritizationTools/PrioritizationTools.jsx
+- [ ] T039 [US8] Finalize live RICE input, calculation, and persistence in src/components/PrioritizationTools/RiceScoring.jsx
+- [ ] T040 [US8] Finalize RICE-based sort ordering in src/hooks/useTaskSort.js
+- [ ] T041 [US8] Finalize optional RICE badge rendering in src/components/DailyPlanner/TaskItem.jsx
 
-**Checkpoint**: RICE Scoring works - All user stories complete
+**Checkpoint**: User Story 8 works independently as the advanced prioritization layer.
 
 ---
 
 ## Phase 11: Polish & Cross-Cutting Concerns
 
-**Purpose**: Performance optimization (virtualization for 100+ tasks), archive history view, and E2E tests
+**Purpose**: Finish adjacent UX polish and documentation that support the planner release as a stable product increment.
 
-- [x] T054 [P] Enable virtualization in TaskList in src/components/DailyPlanner/TaskList.jsx (activate useVirtualizer when task count > 50, per SC-002)
-- [x] T055 [P] Create TaskHistory.jsx component in src/components/TaskHistory/TaskHistory.jsx (archived tasks view, FR-033 - optional for MVP)
-- [x] T056 [P] Create TaskHistory.css styles in src/components/TaskHistory/TaskHistory.css
-- [x] T057 [P] Add TaskHistory link to navigation in src/components/Navigation/SectionNav.jsx
-- [x] T058 [P] Create daily-planner.spec.ts E2E tests in e2e/daily-planner.spec.ts (task CRUD, inline edit, delete with undo, completion flow)
-- [x] T059 [P] Create task-drag-drop.spec.ts E2E tests in e2e/task-drag-drop.spec.ts (drag reordering, keyboard a11y)
-- [x] T060 [P] Create prioritization-tools.spec.ts E2E tests in e2e/prioritization-tools.spec.ts (Eisenhower, Top 3, RICE)
-- [x] T061 Run quickstart.md validation to verify all setup steps work
+- [ ] T042 [P] Add breathing visual and timer regression coverage in src/components/BreathingExercise.test.jsx
+- [ ] T043 [P] Refine breathing routine state and visual metadata in src/components/BreathingExercise.jsx
+- [ ] T044 [P] Refine breathing animation performance and reduced-motion behavior in src/components/BreathingExercise.css
+- [ ] T045 [P] Update user-facing testing and feature documentation in README.md
+- [ ] T046 [P] Update validation and execution guidance in specs/002-daily-planner/quickstart.md
 
 ---
 
@@ -209,97 +218,124 @@
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: No dependencies - can start immediately
-- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
-- **User Stories (Phase 3-10)**: All depend on Foundational phase completion
-  - Stories can proceed sequentially (P1 → P2 → P3 → P4) or in parallel if staffed
-- **Polish (Phase 11)**: Depends on all user stories being complete
+- **Setup (Phase 1)**: No dependencies, can start immediately.
+- **Foundational (Phase 2)**: Depends on Setup and blocks all user-story work.
+- **User Stories (Phases 3-10)**: Depend on Foundational completion.
+- **Polish (Phase 11)**: Depends on the desired story phases being complete.
 
 ### User Story Dependencies
 
-| Story | Priority | Can Start After | Depends On Other Stories |
-|-------|----------|-----------------|--------------------------|
-| US1 - Today View | P1 | Phase 2 (Foundational) | None |
-| US2 - Quick Add | P1 | Phase 2 | None (integrates with US1 components) |
-| US3 - Completion | P1 | Phase 2 | None (integrates with US1 components) |
-| US4 - Drag Reorder | P2 | Phase 2 | None |
-| US5 - Sorting | P2 | Phase 2 | None |
-| US6 - Eisenhower | P3 | Phase 2 | None |
-| US7 - Top 3 Focus | P3 | Phase 2 | None (displays in US1 view) |
-| US8 - RICE Scoring | P4 | Phase 2 | None |
+- **US1 (P1)**: Starts after Phase 2 and does not depend on any other story.
+- **US2 (P1)**: Starts after Phase 2 and builds on the planner shell from US1 while remaining independently testable.
+- **US3 (P1)**: Starts after Phase 2 and depends only on the shared planner/task state.
+- **US4 (P2)**: Starts after Phase 2 and can proceed in parallel with US5-US8.
+- **US5 (P2)**: Starts after Phase 2 and integrates with the shared task collections.
+- **US6 (P3)**: Starts after Phase 2 and integrates with prioritization data only.
+- **US7 (P3)**: Starts after Phase 2 and depends on task metadata, not on matrix completion.
+- **US8 (P4)**: Starts after Phase 2 and extends sorting/display behavior independently.
 
-### Parallel Opportunities
+### Recommended Delivery Order
 
-**Within Phase 1 (Setup)**:
-```
-T002, T003, T005 can run in parallel
+1. Phase 1 → Phase 2
+2. US1 → US2 → US3 for MVP stabilization
+3. US4 and US5 in either order
+4. US6 and US7 in either order
+5. US8
+6. Polish
+
+### Within Each User Story
+
+- Story-specific tests come first and should fail before the corresponding implementation tasks are completed.
+- Data/state tasks precede UI integration tasks when both exist.
+- Each story should be revalidated independently before moving to the next priority band.
+
+---
+
+## Parallel Example: User Story 1
+
+```bash
+# Run the test and UI refinements in parallel once foundational work is done:
+Task: T008 Add Today view render and empty-state coverage in src/components/DailyPlanner/DailyPlanner.test.jsx
+Task: T009 Refine current-date and summary rendering in src/components/DailyPlanner/TodayView.jsx
+Task: T011 Tighten active/completed list separation in src/components/DailyPlanner/TaskList.jsx
 ```
 
-**Within Phase 2 (Foundational)**:
-```
-T007, T008, T009, T010 can run in parallel (after T006)
+## Parallel Example: User Story 4
+
+```bash
+# Split reorder work across test, hook, and persistence layers:
+Task: T021 Add manual reorder regression coverage in src/hooks/useTasks.test.js
+Task: T022 Finalize drag sensor and keyboard reorder flow in src/hooks/useDragAndDrop.js
+Task: T024 Harden fractional manual-order persistence in src/services/taskService.js
 ```
 
-**Within Each User Story (Example: US1)**:
-```
-T012, T013, T014, T015, T016, T017, T018, T019 can ALL run in parallel
-```
+## Parallel Example: User Story 6
 
-**Across User Stories (with multiple developers)**:
-```
-After Phase 2 completes:
-- Developer A: US1 → US2 → US3 (P1 MVP track)
-- Developer B: US4 → US5 (P2 track)
-- Developer C: US6 → US7 → US8 (P3/P4 track)
+```bash
+# Develop matrix behavior, constants, and section wiring concurrently:
+Task: T029 Add Eisenhower matrix interaction coverage in src/components/PrioritizationTools/PrioritizationTools.test.jsx
+Task: T031 Finalize quadrant-to-priority constants in src/data/priorityConfig.js
+Task: T033 Integrate matrix state and section wiring in src/components/PrioritizationTools/PrioritizationTools.jsx
 ```
 
 ---
 
 ## Implementation Strategy
 
-### MVP First (P1 User Stories Only)
+### MVP First (User Stories 1-3 Only)
 
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
-3. Complete Phase 3: US1 - Today View
-4. Complete Phase 4: US2 - Quick Add
-5. Complete Phase 5: US3 - Task Completion
-6. **STOP and VALIDATE**: Test MVP independently - users can view, add, and complete tasks
-7. Deploy/demo if ready
+1. Complete Setup.
+2. Complete Foundational.
+3. Complete US1, US2, and US3.
+4. Validate the planner MVP: Today view, quick add/edit, completion, delete, and undo.
+5. Demo or ship the stabilized MVP before tackling advanced prioritization.
 
 ### Incremental Delivery
 
-| Increment | Stories | Value Delivered |
-|-----------|---------|-----------------|
-| MVP | US1 + US2 + US3 | Basic task management with Today View |
-| v1.1 | + US4 + US5 | Personalized ordering and flexible views |
-| v1.2 | + US6 + US7 | Prioritization decision support |
-| v1.3 | + US8 | Advanced RICE scoring |
+1. **Increment 1**: Setup + Foundational + US1-US3
+2. **Increment 2**: US4-US5
+3. **Increment 3**: US6-US7
+4. **Increment 4**: US8 + Polish
 
-### Task Counts
+### Parallel Team Strategy
 
-| Phase | Task Count | Parallel Tasks |
-|-------|------------|----------------|
-| Setup | 5 | 3 |
-| Foundational | 6 | 4 |
-| US1 (P1) | 9 | 8 |
-| US2 (P1) | 4 | 2 |
-| US3 (P1) | 6 | 2 |
-| US4 (P2) | 4 | 0 |
-| US5 (P2) | 4 | 2 |
-| US6 (P3) | 6 | 4 |
-| US7 (P3) | 4 | 2 |
-| US8 (P4) | 5 | 2 |
-| Polish | 8 | 7 |
-| **Total** | **61** | **36** |
+With multiple contributors after Phase 2:
+
+- Engineer A: US1-US3
+- Engineer B: US4-US5
+- Engineer C: US6-US8
+- Shared follow-up: Polish tasks T042-T046
 
 ---
 
+## Task Counts
+
+- **Setup**: 3
+- **Foundational**: 4
+- **US1**: 4
+- **US2**: 4
+- **US3**: 5
+- **US4**: 4
+- **US5**: 4
+- **US6**: 5
+- **US7**: 4
+- **US8**: 4
+- **Polish**: 5
+- **Total**: 46
+
+## Independent Test Criteria by Story
+
+- **US1**: Today view shows date, summary, and task list immediately on load.
+- **US2**: Quick add creates a task on Enter and inline editing persists title changes.
+- **US3**: Completion, restore, delete, and undo all work without losing task state.
+- **US4**: Manual reorder updates visible order and persists across refresh.
+- **US5**: Each sort mode changes order predictably and exposes the active sort state.
+- **US6**: Matrix movements update both quadrant placement and resulting priority.
+- **US7**: Top 3 generation and dismissal follow deadline-first ranking rules.
+- **US8**: RICE inputs compute scores live and can drive sorting/display.
+
 ## Notes
 
-- All `[P]` tasks can run in parallel (different files, no dependencies)
-- `[Story]` labels map tasks to user stories for traceability
-- Each user story is independently completable and testable
-- Commit after each task or logical group
-- Stop at any checkpoint to validate story independently
-- P1 stories (US1-US3) form the MVP - prioritize these first
+- `[P]` tasks touch different files or isolated layers and can safely run in parallel.
+- Repeated file paths across phases are intentional where the same module supports multiple user stories.
+- Breathing tasks are kept in Polish because they support the validated release but are not part of the original Daily Planner story set.

@@ -23,8 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 
-# Playwright
+# Test output
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+coverage/
+
+# Environment
+.env*
+!.env.example

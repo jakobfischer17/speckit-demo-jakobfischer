@@ -12,7 +12,7 @@ const DB_VERSION = 2;
 /**
  * Initialize and get database connection
  */
-async function getDB() {
+export async function getDB() {
   return openDB(DB_NAME, DB_VERSION, {
     upgrade(db, oldVersion) {
       // Sessions store - completed pomodoro records

@@ -1,104 +1,104 @@
-# Implementation Plan: [FEATURE]
+# Implementation Plan: Daily Planner Validation & Experience Completion
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
-
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
+**Branch**: `002-daily-planner` | **Date**: 2026-03-10 | **Spec**: `/specs/002-daily-planner/spec.md`
+**Input**: Feature specification from `/specs/002-daily-planner/spec.md`
 
 ## Summary
 
-[Extract from feature spec: primary requirement + technical approach from research]
+Complete the Daily Planner feature set by hardening the persistence and multi-tab sync path, replacing flaky browser-driven testing with deterministic component and service tests, and aligning adjacent breathing exercise motion design with the constitution's smooth, accessible SPA requirements. The implementation will stay inside the existing React 19 + Vite single-page app, preserve IndexedDB + BroadcastChannel as the runtime backbone, and validate key user flows through Vitest, Testing Library, jsdom, fake-indexeddb, and mocked timers.
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
-
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [single/web/mobile - determines source structure]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: JavaScript (ES modules) with React 19 on Node.js 20+  
+**Primary Dependencies**: React 19, Vite 7, `idb`, `@dnd-kit/*`, `@tanstack/react-virtual`, `date-fns`, Vitest 4, Testing Library, jsdom, fake-indexeddb  
+**Storage**: IndexedDB (`productivity-hub`) via shared `db.js`; BroadcastChannel for multi-tab sync  
+**Testing**: Vitest 4 + Testing Library + jsdom + fake-indexeddb + mocked timers  
+**Target Platform**: Modern desktop/mobile browsers on Windows/macOS/Linux (latest Chrome, Edge, Firefox, Safari)  
+**Project Type**: Single-page web application  
+**Performance Goals**: Task creation under 200ms, Top 3 generation under 500ms, 60fps animations/interactions, responsive planner behavior with 200 active tasks  
+**Constraints**: No full page reloads, transform/opacity-preferred motion, keyboard accessibility, last-write-wins sync, offline-capable local persistence, no new UI framework  
+**Scale/Scope**: One SPA codebase with Today view, task CRUD/reordering/sorting, prioritization tools, breathing exercises, and colocated service/component tests
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+### Pre-Research Gate Review
+
+- **I. Seamless Single-Page Experience**: PASS. The work stays inside the existing SPA, keeps section-level continuity, and avoids route/page reload additions.
+- **II. Code Quality First**: PASS WITH FOLLOW-UP. The plan preserves the current co-located component/style structure and shared service boundaries. The repo has unrelated existing lint debt; feature work must avoid introducing new lint issues and should reduce touched-file debt where feasible.
+- **III. Testing Standards**: PASS. The plan replaces brittle browser-driven coverage with deterministic service/component tests, uses mocked timers for timer-driven UI, and relies on accessible selectors.
+- **IV. Visual & Interaction Consistency**: PASS. Breathing visuals and planner interactions will use the existing visual system, include reduced-motion handling, and prefer smooth transform-based motion.
+- **V. Performance for Smooth UX**: PASS. Existing virtualization and lightweight service architecture are retained; testing changes reduce feedback latency and planner interactions remain within SPA performance targets.
+
+### Post-Design Gate Review
+
+- PASS. The design keeps a single-project SPA structure, adds no constitution violations, and does not require any exceptions or governance waivers.
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
-├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+specs/002-daily-planner/
+├── plan.md
+├── research.md
+├── data-model.md
+├── quickstart.md
+├── contracts/
+│   └── components.md
+└── tasks.md
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
-├── models/
+├── App.jsx
+├── components/
+│   ├── BreathingExercise.jsx
+│   ├── BreathingExercise.css
+│   ├── BreathingExercise.test.jsx
+│   ├── DailyPlanner/
+│   │   ├── DailyPlanner.jsx
+│   │   ├── DailyPlanner.css
+│   │   ├── DailyPlanner.test.jsx
+│   │   ├── TodayView.jsx
+│   │   ├── TaskList.jsx
+│   │   ├── TaskItem.jsx
+│   │   ├── QuickAdd.jsx
+│   │   ├── SortControls.jsx
+│   │   ├── CompletedSection.jsx
+│   │   └── UndoToast.jsx
+│   ├── Navigation/
+│   ├── PrioritizationTools/
+│   ├── Rewards/
+│   └── Statistics/
+├── data/
+├── hooks/
+│   ├── useDragAndDrop.js
+│   ├── useTaskArchive.js
+│   ├── useTasks.js
+│   ├── useTaskSort.js
+│   └── useTop3Focus.js
 ├── services/
-├── cli/
-└── lib/
+│   ├── db.js
+│   ├── statsService.js
+│   ├── taskService.js
+│   └── taskService.test.js
+└── main.jsx
 
-tests/
-├── contract/
-├── integration/
-└── unit/
+.vscode/
+└── settings.json
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+vitest.setup.js
+vite.config.js
+package.json
+README.md
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Use the existing single-project SPA structure rooted in `src/`, with component tests colocated beside interactive UI and service regression tests kept beside the relevant service module. No backend or separate test harness project is needed.
 
 ## Complexity Tracking
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
-
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+No constitution exceptions are required for this plan.

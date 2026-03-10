@@ -1,311 +1,157 @@
-# Quickstart: Daily Planner & Task Management
+# Quickstart: Daily Planner Validation & Supporting UX
 
 **Feature**: 002-daily-planner  
-**Date**: 2026-01-27
+**Date**: 2026-03-10
 
 ---
 
 ## Prerequisites
 
-- Node.js 20+ (LTS recommended)
+- Node.js 20+ (Node 22 recommended)
 - npm 10+
 - Git
+- Modern Chromium, Firefox, or Safari browser for manual UI validation
 
 ---
 
 ## Setup
 
-### 1. Clone and Install
+### 1. Install Dependencies
 
 ```bash
-# If not already cloned
-git clone <repo-url>
-cd speckit-demo-jakobfischer
-
-# Switch to feature branch
-git checkout 002-daily-planner
-
-# Install existing dependencies
 npm install
 ```
 
-### 2. Install New Dependencies
+### 2. Verify the Core Toolchain
 
 ```bash
-# Drag-and-drop
-npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
-
-# List virtualization
-npm install @tanstack/react-virtual
-
-# Date utilities (for Top 3 algorithm)
-npm install date-fns
-```
-
-### 3. Verify Installation
-
-```bash
-# Run dev server
-npm run dev
-
-# Verify build
 npm run build
-
-# Run lint
 npm run lint
+npm test
 ```
+
+Note: the current repository contains unrelated baseline lint failures outside this feature area. Treat them as existing debt unless the touched files are part of the current work.
 
 ---
 
-## Development Workflow
+## Local Development Workflow
 
-### Start Development Server
+### Start the SPA
 
 ```bash
 npm run dev
-# Opens at http://localhost:5173
 ```
 
-### Run E2E Tests
+Expected outcome:
+
+- Vite serves the SPA locally
+- Today view, planner, prioritization tools, and breathing sections render client-side without reloads
+
+### Run the Deterministic Test Suite
 
 ```bash
-# Install Playwright browsers (first time)
-npx playwright install
+# Full component/service suite
+npm test
 
-# Run all tests
-npx playwright test
+# Interactive watch mode
+npm run test:watch
 
-# Run specific test file
-npx playwright test e2e/daily-planner.spec.ts
-
-# Run tests with UI
-npx playwright test --ui
+# Planner-focused regression slice
+npm run test:tasks
 ```
 
-### Lint Code
+### Build Verification
 
 ```bash
-npm run lint
+npm run build
 ```
 
 ---
 
-## Project Structure for This Feature
+## Recommended Implementation Order
 
-```
-src/
-├── components/
-│   ├── DailyPlanner/           # ← New directory
-│   │   ├── DailyPlanner.jsx    # Main section component
-│   │   ├── DailyPlanner.css
-│   │   ├── TodayView.jsx       # Date header + summary
-│   │   ├── TodayView.css
-│   │   ├── TaskList.jsx        # Virtualized list container
-│   │   ├── TaskList.css
-│   │   ├── TaskItem.jsx        # Individual task row
-│   │   ├── TaskItem.css
-│   │   ├── QuickAdd.jsx        # Fast task input
-│   │   ├── QuickAdd.css
-│   │   ├── SortControls.jsx    # Sort dropdown
-│   │   └── SortControls.css
-│   ├── PrioritizationTools/    # ← New directory
-│   │   ├── PrioritizationTools.jsx
-│   │   ├── PrioritizationTools.css
-│   │   ├── EisenhowerMatrix.jsx
-│   │   ├── EisenhowerMatrix.css
-│   │   ├── TopThreeFocus.jsx
-│   │   ├── TopThreeFocus.css
-│   │   ├── RiceScoring.jsx
-│   │   └── RiceScoring.css
-│   └── TaskHistory/            # ← New directory
-│       ├── TaskHistory.jsx
-│       └── TaskHistory.css
-├── hooks/
-│   ├── useTasks.js             # ← New hook
-│   ├── useTaskSort.js          # ← New hook
-│   ├── useDragAndDrop.js       # ← New hook
-│   ├── useTaskArchive.js       # ← New hook
-│   └── useTop3Focus.js         # ← New hook
-├── services/
-│   ├── db.js                   # ← Extend (add tasks store)
-│   └── taskService.js          # ← New service
-└── data/
-    └── priorityConfig.js       # ← New config
+### Phase 1: Persistence Hardening
+
+1. Confirm `taskService.js` uses shared `getDB()` from `db.js`
+2. Add/maintain regression coverage for legacy IndexedDB upgrade behavior
+3. Validate archive and completed-task lifecycle behavior at service level
+
+### Phase 2: Planner Flow Coverage
+
+1. Cover quick-add, inline edit, completion, delete, and undo in `DailyPlanner.test.jsx`
+2. Add focused coverage for reorder/sort edge cases where practical
+3. Keep selectors semantic (`role`, `label`, `alert`) rather than styling-based
+
+### Phase 3: Breathing Experience Polish
+
+1. Keep breathing routines data-driven
+2. Ensure visuals are pattern-specific and motion-safe
+3. Add deterministic timer coverage for exercise switching and phase advancement
+
+### Phase 4: Final Verification
+
+1. Re-run targeted tests
+2. Re-run full Vitest suite
+3. Run production build
+4. Check touched files for lint regressions
+
+---
+
+## Key Files in Scope
+
+```text
+src/components/DailyPlanner/DailyPlanner.jsx
+src/components/DailyPlanner/DailyPlanner.test.jsx
+src/components/DailyPlanner/TaskList.jsx
+src/components/DailyPlanner/TaskItem.jsx
+src/components/DailyPlanner/UndoToast.jsx
+src/components/BreathingExercise.jsx
+src/components/BreathingExercise.css
+src/components/BreathingExercise.test.jsx
+src/hooks/useTasks.js
+src/services/db.js
+src/services/taskService.js
+src/services/taskService.test.js
+vitest.setup.js
+vite.config.js
+package.json
+README.md
 ```
 
 ---
 
-## Key Files to Modify
+## Common Validation Tasks
 
-### 1. `src/services/db.js`
-
-Add tasks and archivedTasks stores (see data-model.md for schema).
+### Clear Local Planner Data
 
 ```javascript
-// Increment version
-const DB_VERSION = 2;
-
-// Add in upgrade handler:
-if (oldVersion < 2) {
-  const tasksStore = db.createObjectStore('tasks', { keyPath: 'id' });
-  // ... indexes
-}
+indexedDB.deleteDatabase('productivity-hub')
 ```
 
-### 2. `src/App.jsx`
+Use this in the browser console when validating fresh-start behavior or DB upgrade paths manually.
 
-Add DailyPlanner and PrioritizationTools sections.
-
-```jsx
-import { DailyPlanner } from './components/DailyPlanner/DailyPlanner';
-import { PrioritizationTools } from './components/PrioritizationTools/PrioritizationTools';
-
-// Add to render, with appropriate section IDs for navigation
-```
-
-### 3. `src/components/Navigation/SectionNav.jsx`
-
-Add navigation links for new sections.
-
-```javascript
-const sections = [
-  { id: 'today', label: 'Today' },
-  { id: 'prioritization', label: 'Prioritization' },
-  // ... existing sections
-];
-```
-
----
-
-## Implementation Order
-
-### Phase 1: Foundation (Blocking)
-1. Extend `db.js` with tasks store
-2. Create `taskService.js` with CRUD
-3. Create `useTasks.js` hook
-4. Basic `TaskItem` component
-
-### Phase 2: Today View (P1)
-1. `TodayView` component
-2. `QuickAdd` component
-3. `TaskList` component
-4. Task completion animation
-
-### Phase 3: Reordering & Sorting (P2)
-1. `useDragAndDrop.js` hook
-2. Drag-and-drop in `TaskList`
-3. `SortControls` component
-4. `useTaskSort.js` hook
-
-### Phase 4: Prioritization Tools (P3-P4)
-1. `EisenhowerMatrix` component
-2. `TopThreeFocus` component
-3. `RiceScoring` component
-
-### Phase 5: Polish
-1. Virtualization for large lists
-2. Archive functionality
-3. E2E tests
-
----
-
-## Environment Variables
-
-No new environment variables required.
-
----
-
-## Common Tasks
-
-### Create a New Component
+### Run a Single Test File
 
 ```bash
-# Create component directory
-mkdir -p src/components/DailyPlanner
-
-# Create files
-touch src/components/DailyPlanner/TaskItem.jsx
-touch src/components/DailyPlanner/TaskItem.css
+vitest run src/components/BreathingExercise.test.jsx
+vitest run src/components/DailyPlanner/DailyPlanner.test.jsx
+vitest run src/services/taskService.test.js
 ```
 
-### Test IndexedDB Changes
+### Validate Reduced-Motion Friendly UI
 
-```javascript
-// In browser console, clear DB to test migrations:
-indexedDB.deleteDatabase('productivity-hub');
-// Then refresh page
-```
+Manual check:
 
-### Debug Drag-and-Drop
-
-```javascript
-// Add to DndContext for debugging:
-onDragStart={(e) => console.log('drag start', e)}
-onDragOver={(e) => console.log('drag over', e)}
-onDragEnd={(e) => console.log('drag end', e)}
-```
+1. Enable reduced motion at OS/browser level
+2. Open the breathing section
+3. Verify motion remains understandable without relying on aggressive animation
 
 ---
 
-## Testing Checklist
+## Definition of Done for This Plan
 
-### Manual Testing
-
-- [ ] Quick-add creates task on Enter
-- [ ] Task checkbox toggles completion
-- [ ] Completed tasks show strike-through animation
-- [ ] Drag task reorders list
-- [ ] Sort options change order
-- [ ] Delete shows undo toast
-- [ ] Undo restores task within 5 seconds
-- [ ] Eisenhower drag updates priority
-- [ ] Top 3 generates suggestions
-- [ ] RICE scores calculate correctly
-- [ ] Multi-tab sync works
-
-### Performance Testing
-
-- [ ] Add 100+ tasks, verify smooth scrolling
-- [ ] Drag operation maintains 60fps
-- [ ] Task creation < 200ms
-
----
-
-## Troubleshooting
-
-### IndexedDB Version Conflict
-
-If you see "VersionError", clear the database:
-```javascript
-indexedDB.deleteDatabase('productivity-hub');
-```
-
-### dnd-kit Not Working
-
-Ensure DndContext wraps the draggable area:
-```jsx
-<DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-  <SortableContext items={taskIds}>
-    {/* TaskItems here */}
-  </SortableContext>
-</DndContext>
-```
-
-### Virtualization Breaks Drag
-
-Ensure `@tanstack/react-virtual` row refs are properly forwarded:
-```jsx
-const Row = React.forwardRef((props, ref) => (
-  <div ref={ref} {...props} />
-));
-```
-
----
-
-## Useful Links
-
-- [dnd-kit Documentation](https://docs.dndkit.com/)
-- [TanStack Virtual](https://tanstack.com/virtual/latest)
-- [IndexedDB Guide](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
-- [Eisenhower Matrix](https://www.eisenhower.me/eisenhower-matrix/)
-- [RICE Scoring](https://www.intercom.com/blog/rice-simple-prioritization-for-product-managers/)
+- Planner persistence works on both fresh and legacy local databases
+- Multi-tab task changes remain synchronized with last-write-wins behavior
+- Core planner interactions are covered by deterministic component/service tests
+- Breathing exercises present pattern-specific guidance and remain testable with fake timers
+- `npm run build` succeeds after the changes

@@ -49,10 +49,10 @@ A React SPA (Single Page Application) for productivity enhancement, featuring fo
 
 ### 🧘 Breathing Exercises
 - Three breathing techniques:
-  - **Box Breathing**: 4-4-4-4 pattern for focus and calm
-  - **4-7-8 Breathing**: For relaxation and sleep
-  - **Energizing Breath**: Quick cycles to boost energy
-- Animated visual guide
+  - **Box Breathing**: 4-4-4-4 pattern with a dot tracing an actual box
+  - **4-7-8 Breathing**: Vertical rise-and-release guide for relaxation
+  - **Energizing Breath**: Rhythmic bar animation for quick breath cycles
+- Pattern-specific visual guide
 - Phase-by-phase instructions
 - Countdown timer for each phase
 
@@ -72,7 +72,7 @@ A React SPA (Single Page Application) for productivity enhancement, featuring fo
 - **Intersection Observer API** for scroll detection
 - **BroadcastChannel API** for multi-tab sync
 - **CSS Variables** for theming
-- **Playwright** for E2E testing
+- **Vitest + Testing Library** for component and service testing
 
 ## Getting Started
 
@@ -98,14 +98,14 @@ npm run preview
 
 ### Run Tests
 ```bash
-# Run all E2E tests
-npx playwright test
+# Run all component and service tests
+npm test
 
-# Run tests with UI
-npx playwright test --ui
+# Run tests in watch mode
+npm run test:watch
 
-# Run specific test file
-npx playwright test e2e/audio-player.spec.ts
+# Run planner-focused tests only
+npm run test:tasks
 ```
 
 ### Lint

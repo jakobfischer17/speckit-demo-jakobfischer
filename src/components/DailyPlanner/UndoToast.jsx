@@ -22,7 +22,7 @@ function UndoToast({
 
     // Show toast
     setIsVisible(true);
-    setCurrentTask(pendingDelete);
+    setCurrentTask(pendingDelete.task);
     setProgress(100);
 
     // Animate progress bar

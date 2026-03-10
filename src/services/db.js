@@ -9,48 +9,53 @@ import { openDB } from 'idb';
 const DB_NAME = 'productivity-hub';
 const DB_VERSION = 2;
 
+let dbPromise = null;
+
 /**
- * Initialize and get database connection
+ * Initialize and get database connection (cached singleton)
  */
 export async function getDB() {
-  return openDB(DB_NAME, DB_VERSION, {
-    upgrade(db, oldVersion) {
-      // Sessions store - completed pomodoro records
-      if (!db.objectStoreNames.contains('sessions')) {
-        const sessionsStore = db.createObjectStore('sessions', { keyPath: 'id' });
-        sessionsStore.createIndex('byDate', 'timestamp');
-        sessionsStore.createIndex('byType', 'type');
-      }
-
-      // Stats store - singleton for user statistics
-      if (!db.objectStoreNames.contains('stats')) {
-        db.createObjectStore('stats', { keyPath: 'id' });
-      }
-
-      // Achievements store - unlocked milestones
-      if (!db.objectStoreNames.contains('achievements')) {
-        db.createObjectStore('achievements', { keyPath: 'type' });
-      }
-
-      // NEW in v2: Tasks store - daily planner tasks
-      if (oldVersion < 2) {
-        if (!db.objectStoreNames.contains('tasks')) {
-          const tasksStore = db.createObjectStore('tasks', { keyPath: 'id' });
-          tasksStore.createIndex('byDueDate', 'dueDate');
-          tasksStore.createIndex('byPriority', 'priority');
-          tasksStore.createIndex('byCreatedAt', 'createdAt');
-          tasksStore.createIndex('byCompleted', 'completedAt');
-          tasksStore.createIndex('byManualOrder', 'manualOrder');
+  if (!dbPromise) {
+    dbPromise = openDB(DB_NAME, DB_VERSION, {
+      upgrade(db, oldVersion) {
+        // Sessions store - completed pomodoro records
+        if (!db.objectStoreNames.contains('sessions')) {
+          const sessionsStore = db.createObjectStore('sessions', { keyPath: 'id' });
+          sessionsStore.createIndex('byDate', 'timestamp');
+          sessionsStore.createIndex('byType', 'type');
         }
 
-        // NEW in v2: Archived tasks store
-        if (!db.objectStoreNames.contains('archivedTasks')) {
-          const archivedStore = db.createObjectStore('archivedTasks', { keyPath: 'id' });
-          archivedStore.createIndex('byArchivedAt', 'archivedAt');
+        // Stats store - singleton for user statistics
+        if (!db.objectStoreNames.contains('stats')) {
+          db.createObjectStore('stats', { keyPath: 'id' });
         }
-      }
-    },
-  });
+
+        // Achievements store - unlocked milestones
+        if (!db.objectStoreNames.contains('achievements')) {
+          db.createObjectStore('achievements', { keyPath: 'type' });
+        }
+
+        // NEW in v2: Tasks store - daily planner tasks
+        if (oldVersion < 2) {
+          if (!db.objectStoreNames.contains('tasks')) {
+            const tasksStore = db.createObjectStore('tasks', { keyPath: 'id' });
+            tasksStore.createIndex('byDueDate', 'dueDate');
+            tasksStore.createIndex('byPriority', 'priority');
+            tasksStore.createIndex('byCreatedAt', 'createdAt');
+            tasksStore.createIndex('byCompleted', 'completedAt');
+            tasksStore.createIndex('byManualOrder', 'manualOrder');
+          }
+
+          // NEW in v2: Archived tasks store
+          if (!db.objectStoreNames.contains('archivedTasks')) {
+            const archivedStore = db.createObjectStore('archivedTasks', { keyPath: 'id' });
+            archivedStore.createIndex('byArchivedAt', 'archivedAt');
+          }
+        }
+      },
+    });
+  }
+  return dbPromise;
 }
 
 // ============================================
@@ -285,4 +290,11 @@ export const __testing = {
   DB_VERSION,
   STATS_ID,
   getDB,
+  closeDB: async () => {
+    if (dbPromise) {
+      const db = await dbPromise;
+      db.close();
+      dbPromise = null;
+    }
+  },
 };

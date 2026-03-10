@@ -140,7 +140,12 @@ function BreathingExercise() {
   const renderVisual = () => {
     if (currentExercise.visual === 'box') {
       return (
-        <div className="breathing-stage breathing-stage--box" data-testid="box-breathing-visual">
+        <div
+          className="breathing-stage breathing-stage--box"
+          data-testid="box-breathing-visual"
+          data-phase={isActive ? phase : ''}
+          data-active={isActive}
+        >
           <div className="breathing-box">
             <div className="breathing-box__outline" aria-hidden="true" />
             <div
@@ -162,7 +167,12 @@ function BreathingExercise() {
 
     if (currentExercise.visual === 'relax') {
       return (
-        <div className="breathing-stage breathing-stage--relax" data-testid="relax-breathing-visual">
+        <div
+          className="breathing-stage breathing-stage--relax"
+          data-testid="relax-breathing-visual"
+          data-phase={isActive ? phase : ''}
+          data-active={isActive}
+        >
           <div className="breathing-column">
             <div className="breathing-column__rail" aria-hidden="true" />
             <div
@@ -179,7 +189,12 @@ function BreathingExercise() {
     }
 
     return (
-      <div className="breathing-stage breathing-stage--energize" data-testid="energizing-breath-visual">
+      <div
+        className="breathing-stage breathing-stage--energize"
+        data-testid="energizing-breath-visual"
+        data-phase={isActive ? phase : ''}
+        data-active={isActive}
+      >
         <div className="breathing-bars" aria-hidden="true">
           {energizeBars.map((height, index) => (
             <span

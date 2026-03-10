@@ -89,11 +89,13 @@ if (!globalThis.ResizeObserver) {
 beforeEach(async () => {
   vi.restoreAllMocks();
   MockBroadcastChannel.reset();
+  await __testing.closeDB();
   await deleteDatabase(__testing.DB_NAME);
 });
 
 afterEach(async () => {
   cleanup();
   MockBroadcastChannel.reset();
+  await __testing.closeDB();
   await deleteDatabase(__testing.DB_NAME);
 });

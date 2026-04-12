@@ -65,7 +65,7 @@ When the Pomodoro timer transitions into a break phase, the Active Break panel i
 
 **Acceptance Scenarios**:
 
-1. **Given** a Pomodoro work session ends, **When** the timer enters a short or long break, **Then** the Active Break panel is highlighted or a prompt invites the user to start an active break.
+1. **Given** a Pomodoro work session ends, **When** the timer enters a short or long break, **Then** a dismissible invitation banner appears within the Active Break tab, inviting the user to start an active break.
 2. **Given** the user dismisses the Active Break prompt, **When** they remain in the break phase, **Then** the prompt does not reappear for that same break.
 3. **Given** the Pomodoro timer is in a work phase, **When** the user navigates to Active Break manually, **Then** the panel opens normally with no integration-related side effects.
 
@@ -92,6 +92,8 @@ When the Pomodoro timer transitions into a break phase, the Active Break panel i
 - **FR-008**: The Active Break panel MUST function as a standalone component independent of the Pomodoro timer.
 - **FR-009**: When the Pomodoro timer enters a break phase, the system MUST surface an invitation to start an active break (non-blocking prompt, dismissible).
 - **FR-010**: Breathing patterns used in the cool-down MUST reuse the existing BreathingExercise component or its underlying logic without duplicating behaviour.
+- **FR-011**: When all exercises in the currently selected category have been completed in a session, the system MUST display a congratulations state and offer the option to reset completed status for that category.
+- **FR-012**: If the Pomodoro timer transitions from a break phase back to a work phase while an exercise is in progress, the system MUST display a non-blocking "Your break has ended" notification and allow the user to finish the exercise naturally.
 
 ### Key Entities
 
@@ -107,13 +109,13 @@ When the Pomodoro timer transitions into a break phase, the Active Break panel i
 - **SC-002**: Users can identify the correct movement for any exercise from the animation alone, without referring to external resources (validated by usability observation: ≥80% of test users perform the correct motion on first attempt).
 - **SC-003**: A breathing cool-down begins automatically within 3 seconds of completing an Intense exercise — zero additional user interactions required.
 - **SC-004**: The Active Break prompt appears on every Pomodoro break transition with no additional user configuration.
-- **SC-005**: All exercise animations remain legible and performant (no dropped frames visible to the naked eye) on common desktop and mobile viewport sizes.
+- **SC-005**: Lottie exercise animations render at ≥ 60 fps on a mid-range mobile device (verified via Chrome DevTools Performance panel with 4× CPU throttle); no jank observable in the browser Performance timeline on both desktop and mobile viewport sizes.
 
 ## Assumptions
 
 - The existing `BreathingExercise` component and its breathing-pattern data structures will be reused directly for cool-down sequences; no separate breathing implementation will be created.
 - Exercises are defined as static data (not fetched from a remote API) in the initial version; dynamic or user-added exercises are out of scope.
-- Exercise animations are CSS/SVG-based to avoid large binary asset downloads and stay within the 200 kB bundle budget defined in the project constitution.
+- Exercise animations use lottie-react (decided in plan.md research phase); Lottie JSON animation assets are imported statically and can be lazy-loaded via dynamic imports if bundle pressure requires.
 - Audio cues (voice coaching, sound effects) are out of scope for v1; the feature must be fully usable in silence.
 - The Pomodoro integration is a soft prompt only — the Active Break panel does not pause or control the Pomodoro timer.
 - Mobile-first layout is assumed; the animations must degrade gracefully on viewports as small as 320 px wide.

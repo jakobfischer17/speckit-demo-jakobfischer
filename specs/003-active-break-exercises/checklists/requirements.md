@@ -31,5 +31,12 @@
 
 ## Notes
 
-- All checklist items pass. Spec is ready for `/speckit.clarify` or `/speckit.plan`.
-- Assumption noted: CSS/SVG animations assumed to keep bundle under constitution's 200 kB limit — worth confirming during planning phase.
+- All checklist items pass. Spec updated 2026-04-12 to address analysis findings:
+  - FR-011 added (all-exercises-completed edge case behavior) — tasks T033 added
+  - FR-012 added (break-ends-mid-exercise notification) — task T034 added
+  - US4 Acceptance Scenario 1 clarified (dismissible banner, not ambiguous OR)
+  - SC-005 made measurable (≥60 fps, CPU throttle criterion)
+  - CSS/SVG animation assumption corrected to reflect lottie-react decision
+  - plan.md duplicate Constitution Check block removed
+  - T027 (design tokens) moved from Phase 7 to Phase 2 in tasks.md
+  - T006a (utils test) and T009a (session hook test) added per constitution Principle III

@@ -25,12 +25,6 @@ Animation approach: **lottie-react** (~50 kB gzipped) chosen over Three.js (reje
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
-
-## Constitution Check
-
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
-
 | Principle | Gate | Status | Notes |
 |---|---|---|---|
 | I. DRY & Functional Programming | `useBreathingTimer` extracted and shared; no logic duplication between BreathingExercise and BreathingCoolDown | ✅ PASS | Refactor of BreathingExercise.jsx required as first task |

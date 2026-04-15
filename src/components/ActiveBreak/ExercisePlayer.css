@@ -1,0 +1,84 @@
+.exercise-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--exercise-card-gap);
+  padding: 24px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.exercise-player__name {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.exercise-player__animation {
+  width: 300px;
+  height: 300px;
+}
+
+.exercise-player__counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.exercise-player__count {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--animation-highlight-color);
+}
+
+.exercise-player__label {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.exercise-player__rep-btn {
+  padding: 12px 24px;
+  font-size: 1rem;
+  border: none;
+  border-radius: var(--exercise-card-radius);
+  background: var(--animation-highlight-color);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.exercise-player__rep-btn:hover {
+  opacity: 0.9;
+}
+
+.exercise-player__instructions ol {
+  text-align: left;
+  padding-left: 20px;
+  color: #555;
+}
+
+.exercise-player__instructions li {
+  margin-bottom: 4px;
+}
+
+.exercise-player__skip {
+  padding: 8px 24px;
+  border: 2px solid #ccc;
+  border-radius: var(--exercise-card-radius);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.exercise-player__skip:hover {
+  border-color: #999;
+  color: #333;
+}
+
+@media (max-width: 400px) {
+  .exercise-player__animation {
+    width: 100%;
+    height: auto;
+  }
+}

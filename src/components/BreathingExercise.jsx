@@ -1,91 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import './BreathingExercise.css';
+import { breathingPatterns } from '../data/breathingPatterns';
+import { useBreathingTimer } from '../hooks/useBreathingTimer';
 
 function BreathingExercise() {
-  const [isActive, setIsActive] = useState(false);
-  const [phase, setPhase] = useState('inhale'); // inhale, hold, exhale
-  const [seconds, setSeconds] = useState(0);
-  const [exerciseType, setExerciseType] = useState('box'); // box, relax, energize
+  const [exerciseType, setExerciseType] = useState('box');
+  const { currentPhase, secondsInPhase, isActive, start, stop } = useBreathingTimer(exerciseType);
 
-  const exercises = {
-    box: {
-      name: 'Box Breathing',
-      description: 'Equal time for inhale, hold, exhale, and hold. Great for focus and calm.',
-      phases: [
-        { name: 'inhale', duration: 4, instruction: 'Breathe In' },
-        { name: 'hold', duration: 4, instruction: 'Hold' },
-        { name: 'exhale', duration: 4, instruction: 'Breathe Out' },
-        { name: 'hold', duration: 4, instruction: 'Hold' }
-      ]
-    },
-    relax: {
-      name: '4-7-8 Breathing',
-      description: 'Inhale for 4, hold for 7, exhale for 8. Promotes relaxation and sleep.',
-      phases: [
-        { name: 'inhale', duration: 4, instruction: 'Breathe In' },
-        { name: 'hold', duration: 7, instruction: 'Hold' },
-        { name: 'exhale', duration: 8, instruction: 'Breathe Out' }
-      ]
-    },
-    energize: {
-      name: 'Energizing Breath',
-      description: 'Quick inhale and exhale cycles to boost energy.',
-      phases: [
-        { name: 'inhale', duration: 2, instruction: 'Breathe In' },
-        { name: 'exhale', duration: 2, instruction: 'Breathe Out' }
-      ]
-    }
-  };
-
-  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
-  const currentExercise = exercises[exerciseType];
-  const currentPhaseData = currentExercise.phases[currentPhaseIndex];
-
-  useEffect(() => {
-    let interval;
-    if (isActive) {
-      interval = setInterval(() => {
-        setSeconds((prevSeconds) => {
-          if (prevSeconds >= currentPhaseData.duration - 1) {
-            // Move to next phase
-            const nextIndex = (currentPhaseIndex + 1) % currentExercise.phases.length;
-            setCurrentPhaseIndex(nextIndex);
-            setPhase(currentExercise.phases[nextIndex].name);
-            return 0;
-          }
-          return prevSeconds + 1;
-        });
-      }, 1000);
-    }
-
-    return () => clearInterval(interval);
-  }, [isActive, currentPhaseData, currentPhaseIndex, currentExercise]);
+  const currentExercise = breathingPatterns[exerciseType];
 
   const toggleExercise = () => {
-    if (!isActive) {
-      setCurrentPhaseIndex(0);
-      setSeconds(0);
-      setPhase(currentExercise.phases[0].name);
+    if (isActive) {
+      stop();
+    } else {
+      start();
     }
-    setIsActive(!isActive);
   };
 
   const changeExercise = (type) => {
+    stop();
     setExerciseType(type);
-    setIsActive(false);
-    setCurrentPhaseIndex(0);
-    setSeconds(0);
-    setPhase(exercises[type].phases[0].name);
   };
 
   const getCircleScale = () => {
-    const progress = seconds / currentPhaseData.duration;
-    if (phase === 'inhale') {
-      return 1 + progress * 0.5; // Grow from 1 to 1.5
-    } else if (phase === 'exhale') {
-      return 1.5 - progress * 0.5; // Shrink from 1.5 to 1
+    const progress = secondsInPhase / currentPhase.duration;
+    if (currentPhase.name === 'inhale') {
+      return 1 + progress * 0.5;
+    } else if (currentPhase.name === 'exhale') {
+      return 1.5 - progress * 0.5;
     }
-    return 1.5; // Hold at maximum size
+    return 1.5;
   };
 
   return (
@@ -93,13 +37,13 @@ function BreathingExercise() {
       <h1>🧘 Breathing Exercises</h1>
       
       <div className="exercise-selector">
-        {Object.keys(exercises).map((type) => (
+        {Object.keys(breathingPatterns).map((type) => (
           <button
             key={type}
             className={exerciseType === type ? 'active' : ''}
             onClick={() => changeExercise(type)}
           >
-            {exercises[type].name}
+            {breathingPatterns[type].name}
           </button>
         ))}
       </div>
@@ -111,16 +55,16 @@ function BreathingExercise() {
 
       <div className="breathing-animation">
         <div 
-          className={`breathing-circle ${phase} ${isActive ? 'active' : ''}`}
+          className={`breathing-circle ${currentPhase.name} ${isActive ? 'active' : ''}`}
           style={{ 
             transform: `scale(${isActive ? getCircleScale() : 1})`,
             transition: 'transform 1s ease-in-out'
           }}
         >
           <div className="breathing-text">
-            <div className="instruction">{currentPhaseData.instruction}</div>
+            <div className="instruction">{currentPhase.instruction}</div>
             <div className="countdown">
-              {currentPhaseData.duration - seconds}
+              {currentPhase.duration - secondsInPhase}
             </div>
           </div>
         </div>

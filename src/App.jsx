@@ -1,22 +1,30 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import './App.css'
 import PomodoroTimer from './components/PomodoroTimer'
 import ProductivityTips from './components/ProductivityTips'
 import BreathingExercise from './components/BreathingExercise'
+import ActiveBreak from './components/ActiveBreak/ActiveBreak'
 
 function App() {
   const [activeTab, setActiveTab] = useState('pomodoro')
+  const [isBreakActive, setIsBreakActive] = useState(false)
+
+  const handleModeChange = useCallback(({ mode }) => {
+    setIsBreakActive(mode === 'shortBreak' || mode === 'longBreak')
+  }, [])
 
   const renderContent = () => {
     switch (activeTab) {
       case 'pomodoro':
-        return <PomodoroTimer />
+        return <PomodoroTimer onModeChange={handleModeChange} />
       case 'tips':
         return <ProductivityTips />
       case 'breathing':
         return <BreathingExercise />
+      case 'active-break':
+        return <ActiveBreak isBreakActive={isBreakActive} />
       default:
-        return <PomodoroTimer />
+        return <PomodoroTimer onModeChange={handleModeChange} />
     }
   }
 
@@ -45,6 +53,12 @@ function App() {
           onClick={() => setActiveTab('breathing')}
         >
           🧘 Breathing Exercise
+        </button>
+        <button
+          className={`nav-button ${activeTab === 'active-break' ? 'active' : ''}`}
+          onClick={() => setActiveTab('active-break')}
+        >
+          🏃 Active Break
         </button>
       </nav>
 

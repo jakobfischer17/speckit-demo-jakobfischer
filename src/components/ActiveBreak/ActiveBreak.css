@@ -1,0 +1,66 @@
+.active-break {
+  position: relative;
+}
+
+.active-break__banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: var(--animation-highlight-color);
+  color: #fff;
+  font-weight: 600;
+  border-radius: var(--exercise-card-radius);
+  margin: 0 24px 16px;
+}
+
+.active-break__dismiss {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.active-break__dismiss:hover {
+  opacity: 0.8;
+}
+
+.active-break__toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: var(--exercise-card-radius);
+  font-size: 0.875rem;
+  z-index: 1000;
+  animation: toast-fade-in 0.3s ease;
+}
+
+@keyframes toast-fade-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.active-break__back {
+  display: block;
+  margin: 16px auto;
+  padding: 8px 24px;
+  border: 2px solid #ccc;
+  border-radius: var(--exercise-card-radius);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.active-break__back:hover {
+  border-color: #999;
+  color: #333;
+}

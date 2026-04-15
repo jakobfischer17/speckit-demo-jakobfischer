@@ -7,6 +7,12 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --exercise-card-radius: 12px;
+  --exercise-card-gap: 16px;
+  --filter-chip-height: 36px;
+  --animation-highlight-color: #4caf50;
+  --cooldown-circle-size: 200px;
 }
 
 * {

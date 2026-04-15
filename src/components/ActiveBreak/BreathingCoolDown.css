@@ -1,0 +1,75 @@
+.breathing-cooldown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--exercise-card-gap);
+  padding: 40px 24px;
+}
+
+.breathing-cooldown h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.breathing-cooldown__subtitle {
+  color: #666;
+}
+
+.breathing-cooldown__animation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.breathing-cooldown__circle {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.05));
+  border: 3px solid var(--animation-highlight-color);
+}
+
+.breathing-cooldown__circle.inhale {
+  border-color: #4caf50;
+}
+
+.breathing-cooldown__circle.exhale {
+  border-color: #81c784;
+}
+
+.breathing-cooldown__circle.hold {
+  border-color: #66bb6a;
+}
+
+.breathing-cooldown__text {
+  text-align: center;
+}
+
+.breathing-cooldown__instruction {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.breathing-cooldown__countdown {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--animation-highlight-color);
+}
+
+.breathing-cooldown__skip {
+  padding: 8px 24px;
+  border: 2px solid #ccc;
+  border-radius: var(--exercise-card-radius);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.breathing-cooldown__skip:hover {
+  border-color: #999;
+  color: #333;
+}

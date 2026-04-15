@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './PomodoroTimer.css';
 
-function PomodoroTimer() {
+function PomodoroTimer({ onModeChange = () => {} }) {
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
@@ -57,10 +57,12 @@ function PomodoroTimer() {
   };
 
   const switchMode = (newMode) => {
+    const previousMode = mode;
     setMode(newMode);
     setIsActive(false);
     setMinutes(modes[newMode].duration);
     setSeconds(0);
+    onModeChange({ mode: newMode, previousMode });
   };
 
   const setCustomTimer = () => {

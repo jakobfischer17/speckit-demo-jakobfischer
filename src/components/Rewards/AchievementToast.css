@@ -1,0 +1,154 @@
+.achievement-toast {
+  position: fixed;
+  bottom: var(--spacing-lg, 24px);
+  right: var(--spacing-lg, 24px);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md, 16px);
+  padding: var(--spacing-md, 16px) var(--spacing-lg, 24px);
+  background: linear-gradient(135deg, var(--color-primary, #667eea) 0%, var(--color-secondary, #764ba2) 100%);
+  color: white;
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+  z-index: 9998;
+  max-width: 400px;
+  animation: toast-slide-in 0.3s ease-out;
+}
+
+.achievement-toast--exiting {
+  animation: toast-slide-out 0.3s ease-in forwards;
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.achievement-toast__icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  animation: icon-bounce 0.6s ease-out;
+}
+
+@keyframes icon-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+.achievement-toast__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.achievement-toast__title {
+  margin: 0 0 4px 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.achievement-toast__subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.achievement-toast__dismiss {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.achievement-toast__dismiss:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.achievement-toast__dismiss:focus {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+.achievement-toast__dismiss svg {
+  width: 16px;
+  height: 16px;
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .achievement-toast {
+    left: var(--spacing-md, 16px);
+    right: var(--spacing-md, 16px);
+    bottom: var(--spacing-md, 16px);
+    max-width: none;
+  }
+
+  @keyframes toast-slide-in {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes toast-slide-out {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .achievement-toast {
+    animation: none;
+  }
+
+  .achievement-toast--exiting {
+    animation: none;
+    opacity: 0;
+  }
+
+  .achievement-toast__icon {
+    animation: none;
+  }
+}

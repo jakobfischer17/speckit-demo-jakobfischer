@@ -1,13 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { recordSession } from '../services/statsService';
+import { useMilestones } from '../hooks/useMilestones';
 import './PomodoroTimer.css';
 
-function PomodoroTimer({ onModeChange = () => {} }) {
+function PomodoroTimer({ onMilestoneUnlocked }) {
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState('work'); // work, shortBreak, longBreak
   const [customMinutes, setCustomMinutes] = useState(25);
+  const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const intervalRef = useRef(null);
+  const sessionStartRef = useRef(null);
+  const initialDurationRef = useRef(25);
+
+  const { checkMilestones, getCelebrationMessage } = useMilestones();
 
   const modes = {
     work: { duration: 25, label: 'Work Time' },
@@ -24,13 +31,40 @@ function PomodoroTimer({ onModeChange = () => {} }) {
     }
   }, []);
 
+  // Handle session completion and milestone checking
+  const handleSessionComplete = useCallback(async () => {
+    if (mode === 'work') {
+      // Record the session
+      const durationMinutes = initialDurationRef.current;
+      const result = await recordSession({
+        type: 'pomodoro',
+        duration: durationMinutes,
+        mode,
+        completedAt: new Date().toISOString(),
+      });
+
+      setSessionsCompleted(prev => prev + 1);
+
+      // Check for milestones
+      if (result?.newMilestone) {
+        const celebration = getCelebrationMessage(result.newMilestone);
+        onMilestoneUnlocked?.({
+          milestone: result.newMilestone,
+          ...celebration,
+        });
+      }
+    }
+    
+    playNotificationSound();
+  }, [mode, playNotificationSound, getCelebrationMessage, onMilestoneUnlocked]);
+
   useEffect(() => {
     if (isActive && (minutes > 0 || seconds > 0)) {
       intervalRef.current = setInterval(() => {
         if (seconds === 0) {
           if (minutes === 0) {
             setIsActive(false);
-            playNotificationSound();
+            handleSessionComplete();
           } else {
             setMinutes(minutes - 1);
             setSeconds(59);
@@ -44,9 +78,14 @@ function PomodoroTimer({ onModeChange = () => {} }) {
     }
 
     return () => clearInterval(intervalRef.current);
-  }, [isActive, minutes, seconds, playNotificationSound]);
+  }, [isActive, minutes, seconds, handleSessionComplete]);
 
   const toggleTimer = () => {
+    if (!isActive && mode === 'work') {
+      // Starting a new session, record the start time and duration
+      sessionStartRef.current = Date.now();
+      initialDurationRef.current = minutes;
+    }
     setIsActive(!isActive);
   };
 
@@ -57,12 +96,11 @@ function PomodoroTimer({ onModeChange = () => {} }) {
   };
 
   const switchMode = (newMode) => {
-    const previousMode = mode;
     setMode(newMode);
     setIsActive(false);
     setMinutes(modes[newMode].duration);
     setSeconds(0);
-    onModeChange({ mode: newMode, previousMode });
+    initialDurationRef.current = modes[newMode].duration;
   };
 
   const setCustomTimer = () => {
@@ -71,6 +109,7 @@ function PomodoroTimer({ onModeChange = () => {} }) {
       setMinutes(mins);
       setSeconds(0);
       setIsActive(false);
+      initialDurationRef.current = mins;
     }
   };
 
@@ -83,6 +122,13 @@ function PomodoroTimer({ onModeChange = () => {} }) {
   return (
     <div className="pomodoro-container">
       <h1>🍅 Pomodoro Timer</h1>
+      
+      {sessionsCompleted > 0 && (
+        <div className="session-counter">
+          <span className="session-count">{sessionsCompleted}</span>
+          <span className="session-label">session{sessionsCompleted !== 1 ? 's' : ''} today</span>
+        </div>
+      )}
       
       <div className="mode-selector">
         <button 

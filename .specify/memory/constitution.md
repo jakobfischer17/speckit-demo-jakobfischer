@@ -1,142 +1,166 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: (new) → 1.0.0
-Modified principles: N/A (initial constitution)
+Version change: 1.0.0 → 1.1.0
+Bump rationale: MINOR - Added new principle (Seamless SPA Experience) and expanded UX/Performance guidance for smooth single-page interactions
+
+Modified principles:
+- UX Consistency → Seamless Single-Page Experience (renamed and expanded)
+- Performance Requirements → expanded with SPA-specific optimizations
+
 Added sections:
-  - Core Principles (I–IV)
-  - Performance Requirements
-  - Development Workflow & Quality Gates
-  - Governance
+- Principle I: Seamless Single-Page Experience (new primary principle)
+- Smooth scrolling requirements
+- Section transition guidelines
+- State persistence across navigation
+
+Removed sections: None
+
 Templates requiring updates:
-  - .specify/templates/plan-template.md ✅ Constitution Check gates align with principles below
-  - .specify/templates/spec-template.md ✅ No structural changes required
-  - .specify/templates/tasks-template.md ✅ Task categories reflect testing and UX consistency tasks
-Deferred TODOs: none
+- ✅ plan-template.md - Constitution Check section compatible (no changes needed)
+- ✅ spec-template.md - Requirements align with principles (no changes needed)
+- ✅ tasks-template.md - Phase structure supports quality gates (no changes needed)
+
+Follow-up TODOs: None
 -->
 
 # Productivity Hub Constitution
 
 ## Core Principles
 
-### I. DRY & Functional Programming (NON-NEGOTIABLE)
+### I. Seamless Single-Page Experience
 
-Every piece of logic MUST be expressed exactly once. Duplication of business logic,
-UI behaviour, or data transformations across components or modules is forbidden.
+The application MUST deliver a fluid, uninterrupted single-page experience where users flow naturally between sections without jarring transitions or page reloads.
 
-- New logic MUST be extracted into a pure function or custom hook before being reused
-  in two or more locations.
-- Components MUST be written as pure functional components; class components are
-  prohibited in new code.
-- Side effects MUST be isolated inside `useEffect` or custom hooks — never inlined
-  directly in render logic.
-- Data transformations MUST use declarative array methods (`map`, `filter`, `reduce`)
-  over imperative loops wherever clarity is not sacrificed.
-- Shared utilities MUST live in `src/utils/` or `src/hooks/` and be independently
-  importable without pulling in component-level dependencies.
+- **Smooth Scrolling**: All navigation MUST use CSS `scroll-behavior: smooth` or equivalent JavaScript smooth scrolling; jump cuts are prohibited
+- **Section Transitions**: Content sections MUST transition with subtle fade/slide animations (200-300ms duration) to maintain visual continuity
+- **Scroll Position Awareness**: The application MUST track and highlight the active section via Intersection Observer; users MUST always know where they are
+- **No Full Page Reloads**: Navigation between features MUST NEVER trigger full page reloads; all state changes happen client-side
+- **Sticky Navigation**: The section navigation bar MUST remain visible and accessible at all scroll positions
+- **Scroll Anchoring**: When content dynamically loads or expands, scroll position MUST be preserved to prevent layout shifts
+- **Deep Linking Support**: URL hash fragments SHOULD reflect the current section for shareability without breaking the SPA flow
 
-### II. Code Quality Standards
+**Rationale**: A seamless SPA experience keeps users in flow state, reduces cognitive interruption, and makes the productivity hub feel like a native application rather than a website.
 
-All code merged to `main` MUST pass automated quality gates without suppression.
+### II. Code Quality First
 
-- ESLint (project-configured ruleset) MUST report zero errors; warnings MUST be
-  reviewed and either fixed or explicitly suppressed with a justification comment.
-- Functions MUST remain ≤ 40 lines; components MUST remain ≤ 150 lines. Split when
-  these thresholds are reached — no exceptions without a documented rationale.
-- Magic numbers and strings MUST be extracted to named constants.
-- `console.log` statements MUST NOT appear in committed production code.
-- Imports MUST be ordered: external libraries → internal modules → relative paths,
-  separated by blank lines.
+All code MUST adhere to strict quality standards to ensure maintainability and reliability.
 
-### III. Testing Standards (NON-NEGOTIABLE)
+- **Linting**: All code MUST pass ESLint checks with zero warnings before merge
+- **Component Structure**: React components MUST be single-responsibility; extract logic into custom hooks when state management exceeds 3 state variables
+- **File Organization**: Components MUST be co-located with their styles (`.jsx` + `.css` pairs in same directory)
+- **Naming Conventions**: Components use PascalCase; hooks use `use` prefix; CSS classes use kebab-case with component-scoped prefixes
+- **No Dead Code**: Unused imports, variables, and functions MUST be removed before commit
+- **Explicit Dependencies**: All dependencies MUST be declared in `package.json`; no implicit globals
 
-Tests MUST be written before or alongside new functionality (TDD preferred). No
-feature is considered complete until its acceptance criteria are covered by
-automated tests.
+**Rationale**: Consistent code quality reduces cognitive load, accelerates onboarding, and prevents technical debt accumulation.
 
-- Every pure utility function in `src/utils/` MUST have a corresponding unit test
-  achieving ≥ 90% branch coverage.
-- Every user-facing component MUST have at least one rendering test that verifies
-  its primary output given representative props.
-- Interaction tests (click, keyboard, timer) MUST cover at least the P1 user story
-  acceptance scenario for each component.
-- Tests MUST be co-located: `ComponentName.test.jsx` alongside `ComponentName.jsx`,
-  `util.test.js` alongside `util.js`.
-- No feature branch may be merged while any test is failing (`npm test -- --watch=false`
-  exits non-zero).
+### III. Testing Standards
 
-### IV. User Experience Consistency
+Testing MUST validate user-facing behavior and protect against regressions.
 
-All user-facing surfaces MUST follow a single, shared design language. Divergence
-from established patterns requires explicit approval and a constitution amendment.
+- **Component Testing**: Every user-interactive component MUST have at least one test covering its primary user flow
+- **Test Isolation**: Tests MUST NOT depend on external state or execution order
+- **Acceptance Criteria**: Features MUST include testable acceptance scenarios in Given/When/Then format
+- **Timer Testing**: Components using `setInterval`/`setTimeout` MUST use mocked timers in tests
+- **Accessibility Testing**: Interactive elements MUST be testable via accessible selectors (role, label)
+- **Coverage Threshold**: New features SHOULD maintain or improve overall test coverage
 
-- A global design token file (`src/tokens.css` or equivalent) MUST be the single
-  source of truth for colours, spacing, font sizes, border radii, and animation
-  durations; hard-coded values for these properties are forbidden.
-- Interactive elements (buttons, controls) MUST share the same visual style and
-  hover/focus states defined in the shared token system.
-- Animated transitions MUST use the project-standard easing and duration tokens;
-  custom one-off animations require justification in the PR description.
-- All user interactions MUST produce feedback within 100 ms (visual state change,
-  loading indicator, or similar) regardless of underlying async work.
-- Accessibility: every interactive element MUST be keyboard-reachable and have an
-  ARIA label or visible text label; colour contrast MUST meet WCAG AA (4.5:1 normal,
-  3:1 large text).
+**Rationale**: Tests document expected behavior, enable confident refactoring, and catch regressions before users encounter them.
 
-## Performance Requirements
+### IV. Visual & Interaction Consistency
 
-The application MUST remain performant under typical single-user desktop and
-mobile usage without requiring manual optimisation after each feature addition.
+The application MUST provide a cohesive, accessible, and polished user experience that reinforces the seamless SPA feel.
 
-- **Initial load**: Lighthouse Performance score MUST remain ≥ 85 on a simulated
-  mid-range mobile device (Lighthouse throttle preset).
-- **Interaction responsiveness**: No user-triggered UI update may block the main
-  thread for more than 50 ms (measured via browser DevTools).
-- **Bundle size**: The production JS bundle MUST stay under 200 kB (gzipped).
-  Dependencies added that would breach this threshold require team discussion.
-- **Re-renders**: Components MUST NOT re-render without a change in their own
-  props or subscribed state. React DevTools Profiler checks are part of the
-  pre-merge review checklist for components with timers or frequent state updates.
-- **Memory**: Long-running intervals and event listeners MUST be cleaned up on
-  component unmount (`useEffect` cleanup functions are mandatory for all timers).
+- **Visual Consistency**: All components MUST use the established color palette and spacing system defined in CSS variables
+- **Responsive Design**: Components MUST function correctly on viewport widths from 320px to 1920px
+- **Micro-Interactions**: User actions MUST provide immediate visual feedback with smooth transitions (hover states, focus rings, loading spinners)
+- **Animation Performance**: CSS animations MUST use `transform` and `opacity` only to ensure 60fps rendering; prefer CSS transitions over JavaScript animation
+- **Consistent Motion**: All animations MUST follow the same easing curve (`ease-out` for entrances, `ease-in` for exits) and timing scale
+- **Accessibility**: All interactive elements MUST be keyboard-navigable; focus indicators MUST be visible and follow smooth scroll behavior
+- **Error States**: Components MUST gracefully handle and display error conditions without breaking the page flow
 
-## Development Workflow & Quality Gates
+**Rationale**: Consistent visual language and smooth micro-interactions create a premium feel that keeps users engaged and oriented.
 
-All work MUST flow through the following gate sequence. Skipping a gate requires
-written justification committed alongside the change.
+### V. Performance for Smooth UX
 
-1. **Spec gate** — feature spec exists and is approved before any code is written.
-2. **Test gate** — tests for acceptance scenarios are written (may be failing) before
-   implementation begins.
-3. **Lint gate** — `npm run lint` exits 0 with no suppressions.
-4. **Test pass gate** — `npm test -- --watch=false` exits 0.
-5. **Performance gate** — Lighthouse score and bundle size checked for any PR
-   touching component rendering or adding dependencies.
-6. **Constitution check** — PR description explicitly confirms compliance with
-   principles I–IV and the Performance Requirements section.
+The application MUST meet performance targets that ensure buttery-smooth interactions and instant responsiveness.
 
-Code review MUST verify each gate. Reviewers MUST NOT approve a PR that skips or
-fails a gate without a documented and constitution-backed exception.
+- **Initial Load**: First Contentful Paint MUST occur within 1.5 seconds on 4G connections
+- **Bundle Size**: Production JavaScript bundle MUST NOT exceed 200KB gzipped
+- **Scroll Performance**: Scroll event handlers MUST be throttled/debounced; layouts MUST NOT reflow during scroll
+- **60fps Guarantee**: All animations, transitions, and scroll interactions MUST maintain 60fps; use `will-change` sparingly for animated elements
+- **Instant Feedback**: UI interactions MUST respond within 100ms; longer operations MUST show immediate loading state
+- **Memory Management**: Components MUST clean up timers, subscriptions, and event listeners on unmount
+- **Lazy Loading**: Below-the-fold content and heavy assets SHOULD lazy-load to prioritize above-the-fold interactivity
+- **No Layout Shifts**: Cumulative Layout Shift (CLS) MUST stay below 0.1; reserve space for dynamic content
+
+**Rationale**: Performance is the foundation of a smooth experience; even beautiful animations feel broken when they stutter or lag.
+
+## Technology Stack
+
+The following technology choices are mandated for this project:
+
+| Layer | Technology | Version | SPA Relevance |
+|-------|------------|---------|---------------|
+| Framework | React | 19.x | Client-side routing, virtual DOM |
+| Build Tool | Vite | 7.x | Fast HMR, optimized bundles |
+| Styling | CSS3 with CSS Variables | - | Smooth transitions, theming |
+| Scroll Detection | Intersection Observer API | - | Active section tracking |
+| State Persistence | IndexedDB | - | Seamless data across sessions |
+| Linting | ESLint | 9.x | Code quality |
+| Package Manager | npm | Latest LTS | Dependency management |
+
+**SPA-Specific Constraints**:
+- No full page navigation; all routes handled client-side
+- No additional UI frameworks (Material UI, Chakra, etc.) without constitution amendment
+- No state management libraries for current scope; reassess if component prop drilling exceeds 3 levels
+- All scroll-based features MUST use Intersection Observer (not scroll event listeners)
+- Browser support: Latest 2 versions of Chrome, Firefox, Safari, Edge
+
+## Development Workflow
+
+### Quality Gates
+
+All code changes MUST pass these gates before merge:
+
+1. **Pre-commit**: ESLint passes with zero errors/warnings
+2. **PR Review**: At least one approval from a team member
+3. **Build Verification**: `npm run build` completes without errors
+4. **Constitution Compliance**: Changes align with all applicable principles
+
+### Code Review Checklist
+
+Reviewers MUST verify:
+- [ ] Component follows single-responsibility principle
+- [ ] Styles use established CSS variables
+- [ ] Interactive elements are keyboard-accessible
+- [ ] Timers/subscriptions are properly cleaned up
+- [ ] No console.log statements in production code
+- [ ] Feature documentation updated if applicable
+- [ ] **Smooth scroll behavior preserved** (no jump cuts)
+- [ ] **Animations use transform/opacity only** (60fps)
+- [ ] **No layout shifts during dynamic content loading**
 
 ## Governance
 
-This constitution supersedes all prior verbal agreements and ad-hoc conventions.
-Amendments require:
+This constitution serves as the authoritative source for development standards in the Productivity Hub project.
 
-1. A pull request updating this file with a semantic version bump following the
-   versioning policy below.
-2. A one-sentence rationale for each changed principle.
-3. Updates to all dependent templates listed in the Sync Impact Report header.
-4. Approval from at least one additional contributor (or self-review with explicit
-   justification for solo projects).
+**Amendment Process**:
+1. Propose changes via documented discussion
+2. Evaluate impact on existing code and workflows
+3. Update constitution with version increment
+4. Communicate changes to all contributors
+5. Allow grace period for existing code to comply
 
-**Versioning policy**:
-- MAJOR — backward-incompatible removal or redefinition of a principle.
-- MINOR — new principle or section added, or materially expanded guidance.
-- PATCH — clarifications, wording fixes, non-semantic refinements.
+**Versioning Policy**:
+- MAJOR: Backward-incompatible principle changes or removals
+- MINOR: New principles added or existing ones materially expanded
+- PATCH: Clarifications, typo fixes, non-semantic refinements
 
-All PRs and reviews MUST include a Constitution Check confirming no principle is
-violated. Complexity MUST be justified; prefer the simplest solution that satisfies
-the spec.
+**Compliance**:
+- All PRs MUST reference applicable constitution principles when relevant
+- Constitution violations MUST be resolved before merge or explicitly waived with documented justification
+- Quarterly review of constitution relevance and effectiveness
 
-**Version**: 1.0.0 | **Ratified**: 2026-04-12 | **Last Amended**: 2026-04-12
+**Version**: 1.1.0 | **Ratified**: 2026-01-26 | **Last Amended**: 2026-01-27

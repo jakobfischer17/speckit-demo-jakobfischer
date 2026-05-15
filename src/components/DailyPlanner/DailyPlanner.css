@@ -1,0 +1,60 @@
+.daily-planner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg, 1.5rem);
+  padding: var(--spacing-md, 1rem);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.daily-planner--error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--color-error, #dc3545);
+  background: var(--color-error-bg, #fff5f5);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--spacing-lg, 1.5rem);
+}
+
+.daily-planner__controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--spacing-sm, 0.5rem);
+  padding: var(--spacing-xs, 0.25rem) 0;
+}
+
+.daily-planner__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md, 1rem);
+}
+
+.daily-planner__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1a1a1a);
+  margin: 0;
+}
+
+/* Loading state */
+.daily-planner--loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .daily-planner {
+    padding: var(--spacing-sm, 0.5rem);
+    gap: var(--spacing-md, 1rem);
+  }
+
+  .daily-planner__controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

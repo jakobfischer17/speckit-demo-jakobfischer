@@ -1,109 +1,140 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import {
+  PRODUCTIVITY_CATEGORIES,
+  PRODUCTIVITY_TIPS,
+  getTipsByCategory,
+} from '../data/productivityTips.js';
 import './ProductivityTips.css';
 
 function ProductivityTips() {
-  const tips = [
-    {
-      title: "Use the Pomodoro Technique",
-      description: "Work in 25-minute focused sessions with 5-minute breaks. After 4 sessions, take a longer 15-30 minute break.",
-      icon: "🍅"
-    },
-    {
-      title: "Start with the Hardest Task",
-      description: "Tackle your most challenging task first thing in the morning when your energy is highest.",
-      icon: "🎯"
-    },
-    {
-      title: "Minimize Distractions",
-      description: "Turn off notifications, close unnecessary tabs, and create a dedicated workspace.",
-      icon: "🔕"
-    },
-    {
-      title: "Take Regular Breaks",
-      description: "Short breaks help maintain focus and prevent burnout. Stand up, stretch, or take a brief walk.",
-      icon: "🚶"
-    },
-    {
-      title: "Use the Two-Minute Rule",
-      description: "If something takes less than two minutes, do it immediately instead of adding it to your to-do list.",
-      icon: "⏱️"
-    },
-    {
-      title: "Practice Single-Tasking",
-      description: "Focus on one task at a time. Multitasking reduces productivity and increases errors.",
-      icon: "✨"
-    },
-    {
-      title: "Set Clear Goals",
-      description: "Define specific, measurable goals for each work session to stay focused and motivated.",
-      icon: "🎪"
-    },
-    {
-      title: "Stay Hydrated",
-      description: "Keep water nearby and drink regularly. Dehydration can significantly impact focus and energy.",
-      icon: "💧"
-    },
-    {
-      title: "Use Music Strategically",
-      description: "Background music without lyrics can help maintain focus for some people. Experiment to find what works for you.",
-      icon: "🎵"
-    },
-    {
-      title: "Practice Deep Breathing",
-      description: "Take a few minutes for deep breathing exercises to reduce stress and improve concentration.",
-      icon: "🧘"
-    }
-  ];
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [expandedTip, setExpandedTip] = useState(null);
 
-  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  // Get filtered tips based on active category
+  const displayedTips = useMemo(() => {
+    if (!activeCategory) return PRODUCTIVITY_TIPS;
+    return getTipsByCategory(activeCategory);
+  }, [activeCategory]);
 
-  const nextTip = () => {
-    setCurrentTipIndex((prevIndex) => (prevIndex + 1) % tips.length);
-  };
+  // Handle category selection
+  const handleCategoryClick = useCallback((categoryId) => {
+    setActiveCategory(prev => prev === categoryId ? null : categoryId);
+    setExpandedTip(null);
+  }, []);
 
-  const previousTip = () => {
-    setCurrentTipIndex((prevIndex) => (prevIndex - 1 + tips.length) % tips.length);
-  };
-
-  const currentTip = tips[currentTipIndex];
+  // Handle tip expansion
+  const handleTipClick = useCallback((tipId) => {
+    setExpandedTip(prev => prev === tipId ? null : tipId);
+  }, []);
 
   return (
     <div className="tips-container">
-      <h1>💡 Productivity Tips</h1>
-      
-      <div className="tip-card">
-        <div className="tip-icon">{currentTip.icon}</div>
-        <h2 className="tip-title">{currentTip.title}</h2>
-        <p className="tip-description">{currentTip.description}</p>
-        <div className="tip-counter">
-          Tip {currentTipIndex + 1} of {tips.length}
-        </div>
+      <h1 className="tips-title">💡 Science-Backed Productivity Tips</h1>
+      <p className="tips-subtitle">Evidence-based strategies to boost your focus and efficiency</p>
+
+      {/* Category filter tabs */}
+      <div className="tips-categories" role="tablist" aria-label="Tip categories">
+        <button
+          className={`category-tab ${!activeCategory ? 'category-tab--active' : ''}`}
+          onClick={() => handleCategoryClick(null)}
+          role="tab"
+          aria-selected={!activeCategory}
+          aria-controls="tips-grid"
+        >
+          <span className="category-icon">📚</span>
+          <span className="category-name">All Tips</span>
+          <span className="category-count">{PRODUCTIVITY_TIPS.length}</span>
+        </button>
+        {PRODUCTIVITY_CATEGORIES.map((category) => (
+          <button
+            key={category.id}
+            className={`category-tab ${activeCategory === category.id ? 'category-tab--active' : ''}`}
+            onClick={() => handleCategoryClick(category.id)}
+            role="tab"
+            aria-selected={activeCategory === category.id}
+            aria-controls="tips-grid"
+          >
+            <span className="category-icon">{category.icon}</span>
+            <span className="category-name">{category.name}</span>
+            <span className="category-count">{getTipsByCategory(category.id).length}</span>
+          </button>
+        ))}
       </div>
 
-      <div className="tip-navigation">
-        <button onClick={previousTip} className="nav-btn">
-          ← Previous
-        </button>
-        <button onClick={nextTip} className="nav-btn">
-          Next →
-        </button>
-      </div>
+      {/* Tips grid */}
+      <div 
+        id="tips-grid"
+        className="tips-grid"
+        role="tabpanel"
+        aria-label={activeCategory 
+          ? `${PRODUCTIVITY_CATEGORIES.find(c => c.id === activeCategory)?.name} tips`
+          : 'All tips'
+        }
+      >
+        {displayedTips.map((tip) => {
+          const category = PRODUCTIVITY_CATEGORIES.find(c => c.id === tip.category);
+          const isExpanded = expandedTip === tip.id;
 
-      <div className="all-tips-section">
-        <h2>All Tips</h2>
-        <div className="tips-grid">
-          {tips.map((tip, index) => (
-            <div 
-              key={index} 
-              className={`tip-item ${index === currentTipIndex ? 'active' : ''}`}
-              onClick={() => setCurrentTipIndex(index)}
+          return (
+            <article
+              key={tip.id}
+              className={`tip-card ${isExpanded ? 'tip-card--expanded' : ''}`}
+              onClick={() => handleTipClick(tip.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleTipClick(tip.id);
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-expanded={isExpanded}
             >
-              <span className="tip-item-icon">{tip.icon}</span>
-              <span className="tip-item-title">{tip.title}</span>
-            </div>
-          ))}
-        </div>
+              <div className="tip-card__header">
+                <span className="tip-card__category-icon">{category?.icon}</span>
+                <h3 className="tip-card__title">{tip.title}</h3>
+              </div>
+
+              <p className="tip-card__content">{tip.content}</p>
+
+              {/* Citation - shown when expanded */}
+              {tip.citation && (
+                <div className={`tip-card__citation ${isExpanded ? 'tip-card__citation--visible' : ''}`}>
+                  <span className="citation-label">📖 Source:</span>
+                  <cite className="citation-text">
+                    {tip.citation.url ? (
+                      <a
+                        href={tip.citation.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {tip.citation.source} ({tip.citation.year})
+                      </a>
+                    ) : (
+                      `${tip.citation.source} (${tip.citation.year})`
+                    )}
+                  </cite>
+                </div>
+              )}
+
+              <div className="tip-card__footer">
+                <span className="tip-card__category-label">{category?.name}</span>
+                <span className="tip-card__expand-hint">
+                  {isExpanded ? 'Click to collapse' : 'Click for source'}
+                </span>
+              </div>
+            </article>
+          );
+        })}
       </div>
+
+      {/* Empty state */}
+      {displayedTips.length === 0 && (
+        <div className="tips-empty">
+          <p>No tips found in this category.</p>
+        </div>
+      )}
     </div>
   );
 }

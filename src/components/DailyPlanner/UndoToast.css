@@ -1,0 +1,119 @@
+.undo-toast {
+  position: fixed;
+  bottom: var(--spacing-lg, 1.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-surface-elevated, #333);
+  color: white;
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.25));
+  overflow: hidden;
+  z-index: 1000;
+  animation: toastSlideUp 200ms ease;
+  min-width: 280px;
+  max-width: calc(100vw - 2rem);
+}
+
+@keyframes toastSlideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.undo-toast__content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 0.5rem);
+  padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+}
+
+.undo-toast__icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.undo-toast__message {
+  flex: 1;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.undo-toast__undo {
+  background: transparent;
+  border: none;
+  color: var(--color-primary-light, #90caf9);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: var(--spacing-xs, 0.25rem) var(--spacing-sm, 0.5rem);
+  border-radius: var(--radius-sm, 4px);
+  transition: background 150ms ease;
+  flex-shrink: 0;
+}
+
+.undo-toast__undo:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.undo-toast__undo:focus-visible {
+  outline: 2px solid var(--color-primary-light, #90caf9);
+  outline-offset: 2px;
+}
+
+.undo-toast__dismiss {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: var(--spacing-xs, 0.25rem);
+  border-radius: var(--radius-sm, 4px);
+  transition: color 150ms ease;
+  flex-shrink: 0;
+}
+
+.undo-toast__dismiss:hover {
+  color: white;
+}
+
+.undo-toast__progress {
+  height: 3px;
+  background: var(--color-primary, #1976d2);
+  transition: width 50ms linear;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .undo-toast {
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .undo-toast {
+    bottom: var(--spacing-md, 1rem);
+    left: var(--spacing-md, 1rem);
+    right: var(--spacing-md, 1rem);
+    transform: none;
+  }
+  
+  @keyframes toastSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

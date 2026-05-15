@@ -1,0 +1,279 @@
+.eisenhower-matrix {
+  padding: var(--spacing-md, 1rem);
+}
+
+.eisenhower-matrix__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1a1a1a);
+  margin: 0 0 var(--spacing-xs, 0.25rem) 0;
+}
+
+.eisenhower-matrix__description {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #666);
+  margin: 0 0 var(--spacing-md, 1rem) 0;
+}
+
+/* Staging area */
+.eisenhower-matrix__staging {
+  margin-bottom: var(--spacing-lg, 1.5rem);
+  padding: var(--spacing-md, 1rem);
+  background: var(--color-surface-elevated, #f8f9fa);
+  border-radius: var(--radius-md, 8px);
+  border: 2px dashed var(--color-border-light, #e5e7eb);
+}
+
+.eisenhower-matrix__staging-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #666);
+  margin: 0 0 var(--spacing-sm, 0.5rem) 0;
+}
+
+/* 2x2 Grid */
+.eisenhower-matrix__grid {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  grid-template-rows: auto 1fr 1fr;
+  gap: var(--spacing-sm, 0.5rem);
+  min-height: 400px;
+}
+
+/* Column headers */
+.eisenhower-matrix__header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary, #666);
+  padding: var(--spacing-xs, 0.25rem) var(--spacing-sm, 0.5rem);
+  text-align: center;
+}
+
+.eisenhower-matrix__header--urgent {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.eisenhower-matrix__header--not-urgent {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+/* Row labels */
+.eisenhower-matrix__row-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary, #666);
+  padding: var(--spacing-sm, 0.5rem);
+  text-align: center;
+}
+
+.eisenhower-matrix__row-label--important {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.eisenhower-matrix__row-label--not-important {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+/* Quadrants */
+.eisenhower-matrix__quadrant {
+  background: var(--color-surface, #ffffff);
+  border-radius: var(--radius-md, 8px);
+  border: 2px solid var(--color-border-light, #e5e7eb);
+  padding: var(--spacing-sm, 0.5rem);
+  min-height: 150px;
+  transition: border-color 200ms ease, background 200ms ease;
+}
+
+/* Quadrant positions */
+.eisenhower-matrix__quadrant[data-quadrant="do-first"] {
+  grid-column: 2;
+  grid-row: 2;
+  border-color: var(--color-priority-high, #dc2626);
+  background: var(--color-priority-high-bg, #fef2f2);
+}
+
+.eisenhower-matrix__quadrant[data-quadrant="schedule"] {
+  grid-column: 3;
+  grid-row: 2;
+  border-color: var(--color-primary, #1976d2);
+  background: var(--color-primary-light, #e3f2fd);
+}
+
+.eisenhower-matrix__quadrant[data-quadrant="delegate"] {
+  grid-column: 2;
+  grid-row: 3;
+  border-color: var(--color-warning, #f59e0b);
+  background: #fff8e1;
+}
+
+.eisenhower-matrix__quadrant[data-quadrant="eliminate"] {
+  grid-column: 3;
+  grid-row: 3;
+  border-color: var(--color-text-muted, #9ca3af);
+  background: var(--color-surface-elevated, #f8f9fa);
+}
+
+.eisenhower-matrix__quadrant--over {
+  border-style: dashed;
+  transform: scale(1.02);
+}
+
+.eisenhower-matrix__quadrant--staging {
+  min-height: auto;
+  border: none;
+  background: transparent;
+}
+
+/* Quadrant header */
+.eisenhower-matrix__quadrant-header {
+  margin-bottom: var(--spacing-sm, 0.5rem);
+  padding-bottom: var(--spacing-xs, 0.25rem);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.eisenhower-matrix__quadrant-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #1a1a1a);
+}
+
+.eisenhower-matrix__quadrant-desc {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary, #666);
+}
+
+.eisenhower-matrix__quadrant-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 0.25rem);
+}
+
+.eisenhower-matrix__empty {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #9ca3af);
+  text-align: center;
+  padding: var(--spacing-md, 1rem);
+  font-style: italic;
+}
+
+/* Task card */
+.eisenhower-matrix__task {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 0.25rem);
+  padding: var(--spacing-xs, 0.25rem) var(--spacing-sm, 0.5rem);
+  background: var(--color-surface, #ffffff);
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--color-border-light, #e5e7eb);
+  cursor: grab;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+  font-size: 0.8125rem;
+}
+
+.eisenhower-matrix__task:hover {
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+}
+
+.eisenhower-matrix__task:active {
+  cursor: grabbing;
+}
+
+.eisenhower-matrix__task--dragging {
+  opacity: 0.9;
+  box-shadow: var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.15));
+  z-index: 100;
+}
+
+.eisenhower-matrix__task-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eisenhower-matrix__task-priority {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.625rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.eisenhower-matrix__task-priority--high {
+  background: var(--color-priority-high-bg, #fef2f2);
+  color: var(--color-priority-high, #dc2626);
+}
+
+.eisenhower-matrix__task-priority--medium {
+  background: var(--color-surface-elevated, #f8f9fa);
+  color: var(--color-text-secondary, #666);
+}
+
+.eisenhower-matrix__task-priority--low {
+  background: var(--color-priority-low-bg, #f0fdf4);
+  color: var(--color-priority-low, #16a34a);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .eisenhower-matrix__grid {
+    min-height: 300px;
+  }
+
+  .eisenhower-matrix__quadrant {
+    min-height: 100px;
+  }
+
+  .eisenhower-matrix__row-label {
+    display: none;
+  }
+
+  .eisenhower-matrix__grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr 1fr;
+  }
+
+  .eisenhower-matrix__header--urgent {
+    grid-column: 1;
+  }
+
+  .eisenhower-matrix__header--not-urgent {
+    grid-column: 2;
+  }
+
+  .eisenhower-matrix__quadrant[data-quadrant="do-first"] {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .eisenhower-matrix__quadrant[data-quadrant="schedule"] {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .eisenhower-matrix__quadrant[data-quadrant="delegate"] {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .eisenhower-matrix__quadrant[data-quadrant="eliminate"] {
+    grid-column: 2;
+    grid-row: 3;
+  }
+}

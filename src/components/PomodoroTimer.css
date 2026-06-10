@@ -95,6 +95,33 @@
   margin-bottom: 2rem;
 }
 
+.break-reminder {
+  margin: 0 0 1.5rem;
+  padding: 1rem;
+  border: 2px solid #f39c12;
+  border-radius: 12px;
+  background: #fff8e1;
+}
+
+.break-reminder__title {
+  margin: 0 0 0.75rem;
+  color: #7f5300;
+  font-weight: 600;
+}
+
+.break-reminder__actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.break-reminder__status {
+  margin: 0 0 1rem;
+  color: #7f5300;
+  font-size: 0.95rem;
+}
+
 .control-btn {
   padding: 1rem 2.5rem;
   font-size: 1.2rem;
@@ -122,6 +149,26 @@
 
 .control-btn.reset:hover {
   background: #c0392b;
+  transform: scale(1.05);
+}
+
+.control-btn.skip-break {
+  background: #8e44ad;
+  color: white;
+}
+
+.control-btn.skip-break:hover {
+  background: #7d3c98;
+  transform: scale(1.05);
+}
+
+.control-btn.snooze-break {
+  background: #f39c12;
+  color: white;
+}
+
+.control-btn.snooze-break:hover {
+  background: #d68910;
   transform: scale(1.05);
 }
 

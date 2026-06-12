@@ -235,6 +235,32 @@ export async function recordSession(sessionData) {
 }
 
 /**
+ * Record a break reminder action for session analytics.
+ * @param {Object} actionData - Reminder action metadata
+ * @param {string} actionData.action - 'skip' | 'snooze'
+ * @param {string} actionData.mode - Timer mode context
+ * @returns {Promise<Object|null>} Recorded analytics event or null
+ */
+export async function recordBreakReminderAction(actionData) {
+  if (!isIndexedDBAvailable()) {
+    console.warn('IndexedDB not available, break reminder action not recorded');
+    return null;
+  }
+
+  const timestamp = Date.now();
+  const event = await addSession({
+    timestamp,
+    duration: 0,
+    type: 'breakReminderAction',
+    action: actionData.action,
+    mode: actionData.mode,
+  });
+
+  broadcast({ type: 'BREAK_REMINDER_ACTION_RECORDED', event });
+  return event;
+}
+
+/**
  * Get current stats, initializing if needed
  * @returns {Promise<Object>} User stats
  */

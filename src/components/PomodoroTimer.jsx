@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { recordSession } from '../services/statsService';
+import { recordSession, recordBreakReminderAction } from '../services/statsService';
 import { useMilestones } from '../hooks/useMilestones';
 import './PomodoroTimer.css';
 
@@ -16,8 +16,12 @@ function PomodoroTimer({ onMilestoneUnlocked, preferences }) {
   const [mode, setMode] = useState('work'); // work, shortBreak, longBreak
   const [customMinutes, setCustomMinutes] = useState(durations.work);
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
-  const [breakActionLog, setBreakActionLog] = useState({ skipped: 0, snoozed: 0 });
+  const [showBreakReminder, setShowBreakReminder] = useState(false);
+  const [reminderStatus, setReminderStatus] = useState('');
   const intervalRef = useRef(null);
+  const minutesRef = useRef(durations.work);
+  const secondsRef = useRef(0);
+  const snoozeTimeoutRef = useRef(null);
   const sessionStartRef = useRef(null);
   const initialDurationRef = useRef(durations.work);
 
@@ -29,8 +33,6 @@ function PomodoroTimer({ onMilestoneUnlocked, preferences }) {
     longBreak: { duration: durations.longBreak, label: 'Long Break' },
   };
 
-  const isBreak = mode === 'shortBreak' || mode === 'longBreak';
-
   const playNotificationSound = useCallback(() => {
     // Simple notification (browsers may require user interaction first)
     if ('Notification' in window && Notification.permission === 'granted') {
@@ -40,8 +42,17 @@ function PomodoroTimer({ onMilestoneUnlocked, preferences }) {
     }
   }, []);
 
+  const clearSnoozeReminder = useCallback(() => {
+    if (snoozeTimeoutRef.current) {
+      clearTimeout(snoozeTimeoutRef.current);
+      snoozeTimeoutRef.current = null;
+    }
+  }, []);
+
   // Handle session completion and milestone checking
   const handleSessionComplete = useCallback(async () => {
+    let shouldShowReminder = false;
+
     if (mode === 'work') {
       // Record the session
       const durationMinutes = initialDurationRef.current;
@@ -53,6 +64,7 @@ function PomodoroTimer({ onMilestoneUnlocked, preferences }) {
       });
 
       setSessionsCompleted(prev => prev + 1);
+      shouldShowReminder = true;
 
       // Check for milestones
       if (result?.newMilestone) {
@@ -65,29 +77,53 @@ function PomodoroTimer({ onMilestoneUnlocked, preferences }) {
     }
     
     playNotificationSound();
-  }, [mode, playNotificationSound, getCelebrationMessage, onMilestoneUnlocked]);
+    if (shouldShowReminder) {
+      clearSnoozeReminder();
+      setReminderStatus('');
+      setShowBreakReminder(true);
+    }
+  }, [mode, playNotificationSound, getCelebrationMessage, onMilestoneUnlocked, clearSnoozeReminder]);
 
   useEffect(() => {
-    if (isActive && (minutes > 0 || seconds > 0)) {
-      intervalRef.current = setInterval(() => {
-        if (seconds === 0) {
-          if (minutes === 0) {
-            setIsActive(false);
-            handleSessionComplete();
-          } else {
-            setMinutes(minutes - 1);
-            setSeconds(59);
-          }
-        } else {
-          setSeconds(seconds - 1);
-        }
-      }, 1000);
-    } else {
+    return () => clearSnoozeReminder();
+  }, [clearSnoozeReminder]);
+
+  useEffect(() => {
+    minutesRef.current = minutes;
+    secondsRef.current = seconds;
+  }, [minutes, seconds]);
+
+  useEffect(() => {
+    if (!isActive) {
       clearInterval(intervalRef.current);
+      return () => clearInterval(intervalRef.current);
     }
 
+    intervalRef.current = setInterval(() => {
+      const currentMinutes = minutesRef.current;
+      const currentSeconds = secondsRef.current;
+
+      if (currentMinutes === 0 && currentSeconds === 0) {
+        clearInterval(intervalRef.current);
+        setIsActive(false);
+        handleSessionComplete();
+        return;
+      }
+
+      if (currentSeconds === 0) {
+        minutesRef.current = currentMinutes - 1;
+        secondsRef.current = 59;
+        setMinutes(currentMinutes - 1);
+        setSeconds(59);
+        return;
+      }
+
+      secondsRef.current = currentSeconds - 1;
+      setSeconds(currentSeconds - 1);
+    }, 1000);
+
     return () => clearInterval(intervalRef.current);
-  }, [isActive, minutes, seconds, handleSessionComplete]);
+  }, [isActive, handleSessionComplete]);
 
   const toggleTimer = () => {
     if (!isActive && mode === 'work') {
@@ -95,43 +131,82 @@ function PomodoroTimer({ onMilestoneUnlocked, preferences }) {
       sessionStartRef.current = Date.now();
       initialDurationRef.current = minutes;
     }
+    if (!isActive) {
+      clearSnoozeReminder();
+      setShowBreakReminder(false);
+      setReminderStatus('');
+    }
     setIsActive(!isActive);
   };
 
   const resetTimer = () => {
+    clearSnoozeReminder();
     setIsActive(false);
+    setShowBreakReminder(false);
+    setReminderStatus('');
     setMinutes(modes[mode].duration);
     setSeconds(0);
   };
 
   const switchMode = (newMode) => {
+    clearSnoozeReminder();
     setMode(newMode);
     setIsActive(false);
+    setShowBreakReminder(false);
+    setReminderStatus('');
     setMinutes(modes[newMode].duration);
     setSeconds(0);
     initialDurationRef.current = modes[newMode].duration;
   };
 
-  // Skip the current break and jump straight back to a work session.
-  const skipBreak = () => {
-    setBreakActionLog((prev) => ({ ...prev, skipped: prev.skipped + 1 }));
-    switchMode('work');
-  };
-
-  // Add 5 minutes to the current break without disrupting the countdown.
-  const snoozeBreak = () => {
-    setBreakActionLog((prev) => ({ ...prev, snoozed: prev.snoozed + 1 }));
-    setMinutes((prev) => Math.min(prev + 5, 120));
-  };
-
   const setCustomTimer = () => {
     const mins = parseInt(customMinutes, 10);
     if (mins > 0 && mins <= 120) {
+      clearSnoozeReminder();
       setMinutes(mins);
       setSeconds(0);
       setIsActive(false);
+      setShowBreakReminder(false);
+      setReminderStatus('');
       initialDurationRef.current = mins;
     }
+  };
+
+  const handleSkipBreak = () => {
+    clearSnoozeReminder();
+    setShowBreakReminder(false);
+    setReminderStatus('');
+    setMode('work');
+    setIsActive(false);
+    setMinutes(modes.work.duration);
+    setSeconds(0);
+    initialDurationRef.current = modes.work.duration;
+
+    recordBreakReminderAction({
+      action: 'skip',
+      mode: 'work',
+    }).catch((err) => {
+      console.error('Failed to record break reminder action:', err);
+    });
+  };
+
+  const handleSnoozeBreak = () => {
+    clearSnoozeReminder();
+    setShowBreakReminder(false);
+    setReminderStatus('Break reminder snoozed for 5 minutes');
+
+    recordBreakReminderAction({
+      action: 'snooze',
+      mode: 'work',
+    }).catch((err) => {
+      console.error('Failed to record break reminder action:', err);
+    });
+
+    snoozeTimeoutRef.current = setTimeout(() => {
+      setReminderStatus('');
+      setShowBreakReminder(true);
+      snoozeTimeoutRef.current = null;
+    }, 5 * 60 * 1000);
   };
 
   const requestNotificationPermission = () => {
@@ -142,7 +217,7 @@ function PomodoroTimer({ onMilestoneUnlocked, preferences }) {
 
   return (
     <div className="pomodoro-container">
-      <h1>🍅 Pomodoro Timer</h1>
+      <h1>≡ƒìà Pomodoro Timer</h1>
       
       {sessionsCompleted > 0 && (
         <div className="session-counter">
@@ -179,6 +254,26 @@ function PomodoroTimer({ onMilestoneUnlocked, preferences }) {
         <div className="mode-label">{modes[mode].label}</div>
       </div>
 
+      {showBreakReminder && (
+        <div className="break-reminder" role="alert">
+          <p className="break-reminder__title">Work session complete. Ready for a break?</p>
+          <div className="break-reminder__actions">
+            <button className="control-btn skip-break" onClick={handleSkipBreak}>
+              Skip break
+            </button>
+            <button className="control-btn snooze-break" onClick={handleSnoozeBreak}>
+              Snooze 5 min
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!showBreakReminder && reminderStatus && (
+        <p className="break-reminder__status" role="status">
+          {reminderStatus}
+        </p>
+      )}
+
       <div className="timer-controls">
         <button className="control-btn start" onClick={toggleTimer}>
           {isActive ? 'Pause' : 'Start'}
@@ -187,31 +282,6 @@ function PomodoroTimer({ onMilestoneUnlocked, preferences }) {
           Reset
         </button>
       </div>
-
-      {isBreak && (
-        <div className="break-actions">
-          <button
-            className="control-btn break-skip"
-            onClick={skipBreak}
-            aria-label="Skip break and start a work session"
-          >
-            ⏭️ Skip break
-          </button>
-          <button
-            className="control-btn break-snooze"
-            onClick={snoozeBreak}
-            aria-label="Snooze break for 5 more minutes"
-          >
-            😴 Snooze 5 min
-          </button>
-        </div>
-      )}
-
-      {(breakActionLog.skipped > 0 || breakActionLog.snoozed > 0) && (
-        <p className="break-action-log" aria-live="polite">
-          Breaks skipped: {breakActionLog.skipped} · snoozed: {breakActionLog.snoozed}
-        </p>
-      )}
 
       <div className="custom-timer">
         <h3>Set Custom Timer</h3>

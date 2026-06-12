@@ -32,7 +32,6 @@ function DailyPlanner() {
     sortBy,
     sortDirection,
     isManualOrder,
-    sortLabel,
     setSortBy,
     toggleDirection,
     clearSort,

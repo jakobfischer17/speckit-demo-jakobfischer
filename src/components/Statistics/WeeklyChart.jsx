@@ -73,7 +73,7 @@ function WeeklyChart({ data = [], title = 'This Week' }) {
         
         {/* Bars */}
         <div className="weekly-chart__bars">
-          {chartData.map((day, index) => {
+          {chartData.map((day) => {
             const heightPercent = (day.minutes / maxMinutes) * 100;
             return (
               <div 

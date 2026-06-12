@@ -8,7 +8,7 @@ import { AMBIENT_TRACKS } from '../../data/audioTracks.js';
  * @param {Object} props
  * @param {number} props.volume - Volume level 0-1 (not used for YouTube, but kept for API consistency)
  */
-function AmbientPlayer({ volume }) {
+function AmbientPlayer() {
   const [selectedTrack, setSelectedTrack] = useState(AMBIENT_TRACKS[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [loadError, setLoadError] = useState(false);

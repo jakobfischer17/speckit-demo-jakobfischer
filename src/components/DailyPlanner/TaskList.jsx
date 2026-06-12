@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import './TaskList.css';
 import { DndContext, closestCenter, DragOverlay } from '@dnd-kit/core';
@@ -21,7 +21,6 @@ function TaskList({
   onToggleComplete,
   onDelete,
   onEdit,
-  onReorder,
   isLoading = false,
   sensors,
   activeId,

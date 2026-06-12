@@ -6,7 +6,6 @@ import {
   getAchievement,
   unlockAchievement,
   cleanupOldSessions,
-  getRecentSessions,
   isIndexedDBAvailable,
 } from './db.js';
 

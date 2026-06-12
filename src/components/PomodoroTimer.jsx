@@ -14,7 +14,7 @@ function PomodoroTimer({ onMilestoneUnlocked }) {
   const sessionStartRef = useRef(null);
   const initialDurationRef = useRef(25);
 
-  const { checkMilestones, getCelebrationMessage } = useMilestones();
+  const { getCelebrationMessage } = useMilestones();
 
   const modes = {
     work: { duration: 25, label: 'Work Time' },

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import './TopThreeFocus.css';
 import { useTop3Focus } from '../../hooks/useTop3Focus';
 

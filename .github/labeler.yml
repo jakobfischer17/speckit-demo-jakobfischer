@@ -1,0 +1,24 @@
+# PR auto-labeling rules (actions/labeler v5 syntax).
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: ['**/*.md', 'docs/**']
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: ['.github/workflows/**']
+
+security:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/secret-scan.yml'
+          - '.github/workflows/dependency-review.yml'
+          - '.github/workflows/zap-baseline.yml'
+          - '.gitleaks.toml'
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file: ['**/*.test.js', '**/*.test.jsx']
+
+frontend:
+  - changed-files:
+      - any-glob-to-any-file: ['src/**/*.jsx', 'src/**/*.css']

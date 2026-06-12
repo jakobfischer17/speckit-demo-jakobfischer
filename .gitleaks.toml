@@ -1,0 +1,15 @@
+# Gitleaks configuration for the Productivity Hub.
+# Extend the bundled default ruleset, then add project-specific allowlists.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Baseline allowlist for known false positives"
+# Ignore generated build output and lockfiles.
+paths = [
+  '''dist/''',
+  '''coverage/''',
+  '''package-lock\.json''',
+]
+# Add verified false-positive fingerprints here after triage, e.g.:
+# regexes = ['''EXAMPLE_PUBLIC_SAMPLE_KEY''']

@@ -1,6 +1,7 @@
 import { useStats } from '../../hooks/useStats';
 import StatsCard from './StatsCard';
 import WeeklyChart from './WeeklyChart';
+import WeeklySummary from './WeeklySummary';
 import './Statistics.css';
 
 /**
@@ -85,6 +86,12 @@ function Statistics() {
 
       {/* Weekly chart */}
       <WeeklyChart data={chartData} title="Weekly Focus Overview" />
+
+      {/* Weekly activity summary widget */}
+      <WeeklySummary
+        dailyHistory={dailyHistory}
+        currentStreak={stats?.currentStreak || 0}
+      />
 
       {/* Motivational message based on stats */}
       {stats && (

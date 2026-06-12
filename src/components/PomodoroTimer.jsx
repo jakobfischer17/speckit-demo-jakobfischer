@@ -3,28 +3,34 @@ import { recordSession, recordBreakReminderAction } from '../services/statsServi
 import { useMilestones } from '../hooks/useMilestones';
 import './PomodoroTimer.css';
 
-function PomodoroTimer({ onMilestoneUnlocked }) {
-  const [minutes, setMinutes] = useState(25);
+function PomodoroTimer({ onMilestoneUnlocked, preferences }) {
+  const durations = {
+    work: preferences?.workDuration ?? 25,
+    shortBreak: preferences?.shortBreak ?? 5,
+    longBreak: preferences?.longBreak ?? 15,
+  };
+
+  const [minutes, setMinutes] = useState(durations.work);
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState('work'); // work, shortBreak, longBreak
-  const [customMinutes, setCustomMinutes] = useState(25);
+  const [customMinutes, setCustomMinutes] = useState(durations.work);
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const [showBreakReminder, setShowBreakReminder] = useState(false);
   const [reminderStatus, setReminderStatus] = useState('');
   const intervalRef = useRef(null);
-  const minutesRef = useRef(25);
+  const minutesRef = useRef(durations.work);
   const secondsRef = useRef(0);
   const snoozeTimeoutRef = useRef(null);
   const sessionStartRef = useRef(null);
-  const initialDurationRef = useRef(25);
+  const initialDurationRef = useRef(durations.work);
 
-  const { checkMilestones, getCelebrationMessage } = useMilestones();
+  const { getCelebrationMessage } = useMilestones();
 
   const modes = {
-    work: { duration: 25, label: 'Work Time' },
-    shortBreak: { duration: 5, label: 'Short Break' },
-    longBreak: { duration: 15, label: 'Long Break' },
+    work: { duration: durations.work, label: 'Work Time' },
+    shortBreak: { duration: durations.shortBreak, label: 'Short Break' },
+    longBreak: { duration: durations.longBreak, label: 'Long Break' },
   };
 
   const playNotificationSound = useCallback(() => {
@@ -211,7 +217,7 @@ function PomodoroTimer({ onMilestoneUnlocked }) {
 
   return (
     <div className="pomodoro-container">
-      <h1>🍅 Pomodoro Timer</h1>
+      <h1>≡ƒìà Pomodoro Timer</h1>
       
       {sessionsCompleted > 0 && (
         <div className="session-counter">

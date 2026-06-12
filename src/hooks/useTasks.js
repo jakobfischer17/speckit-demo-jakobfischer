@@ -7,7 +7,6 @@ import {
   getCompletedTasks,
   reorderTasks as reorderTasksService,
   subscribeToTaskBroadcast,
-  broadcastTaskChange,
 } from '../services/taskService';
 
 /**
@@ -81,12 +80,13 @@ export function useTasks() {
           setTasks((prev) => prev.filter((t) => t.id !== event.taskId));
           setCompletedTasks((prev) => prev.filter((t) => t.id !== event.taskId));
           break;
-        case 'FULL_SYNC':
+        case 'FULL_SYNC': {
           const active = event.tasks.filter((t) => !t.completedAt);
           const completed = event.tasks.filter((t) => t.completedAt);
           setTasks(active.sort((a, b) => a.manualOrder - b.manualOrder));
           setCompletedTasks(completed.sort((a, b) => b.completedAt - a.completedAt));
           break;
+        }
         case 'TASKS_REORDERED':
           refreshTasks();
           break;

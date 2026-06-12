@@ -276,3 +276,67 @@ html {
   border-color: transparent;
 }
 
+
+/* ===== Accessibility: skip link ===== */
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  z-index: 1000;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 0 0 var(--radius-sm) 0;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+/* ===== Accessibility: visible focus for keyboard users ===== */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ===== Theme toggle ===== */
+.theme-toggle {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.theme-toggle:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+/* ===== Dark theme ===== */
+[data-theme='dark'] {
+  --color-text-primary: #f3f4f6;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+  --color-bg-primary: #1e293b;
+  --color-bg-secondary: rgba(15, 23, 42, 0.95);
+  --color-bg-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --text-primary: #f3f4f6;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --day-bg: #334155;
+  --day-active-bg: #064e3b;
+  --day-active-fg: #6ee7b7;
+}
+[data-theme='dark'] .content-section {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}

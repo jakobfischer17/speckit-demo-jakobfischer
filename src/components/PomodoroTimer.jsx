@@ -3,24 +3,33 @@ import { recordSession } from '../services/statsService';
 import { useMilestones } from '../hooks/useMilestones';
 import './PomodoroTimer.css';
 
-function PomodoroTimer({ onMilestoneUnlocked }) {
-  const [minutes, setMinutes] = useState(25);
+function PomodoroTimer({ onMilestoneUnlocked, preferences }) {
+  const durations = {
+    work: preferences?.workDuration ?? 25,
+    shortBreak: preferences?.shortBreak ?? 5,
+    longBreak: preferences?.longBreak ?? 15,
+  };
+
+  const [minutes, setMinutes] = useState(durations.work);
   const [seconds, setSeconds] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [mode, setMode] = useState('work'); // work, shortBreak, longBreak
-  const [customMinutes, setCustomMinutes] = useState(25);
+  const [customMinutes, setCustomMinutes] = useState(durations.work);
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
+  const [breakActionLog, setBreakActionLog] = useState({ skipped: 0, snoozed: 0 });
   const intervalRef = useRef(null);
   const sessionStartRef = useRef(null);
-  const initialDurationRef = useRef(25);
+  const initialDurationRef = useRef(durations.work);
 
   const { getCelebrationMessage } = useMilestones();
 
   const modes = {
-    work: { duration: 25, label: 'Work Time' },
-    shortBreak: { duration: 5, label: 'Short Break' },
-    longBreak: { duration: 15, label: 'Long Break' },
+    work: { duration: durations.work, label: 'Work Time' },
+    shortBreak: { duration: durations.shortBreak, label: 'Short Break' },
+    longBreak: { duration: durations.longBreak, label: 'Long Break' },
   };
+
+  const isBreak = mode === 'shortBreak' || mode === 'longBreak';
 
   const playNotificationSound = useCallback(() => {
     // Simple notification (browsers may require user interaction first)
@@ -103,6 +112,18 @@ function PomodoroTimer({ onMilestoneUnlocked }) {
     initialDurationRef.current = modes[newMode].duration;
   };
 
+  // Skip the current break and jump straight back to a work session.
+  const skipBreak = () => {
+    setBreakActionLog((prev) => ({ ...prev, skipped: prev.skipped + 1 }));
+    switchMode('work');
+  };
+
+  // Add 5 minutes to the current break without disrupting the countdown.
+  const snoozeBreak = () => {
+    setBreakActionLog((prev) => ({ ...prev, snoozed: prev.snoozed + 1 }));
+    setMinutes((prev) => Math.min(prev + 5, 120));
+  };
+
   const setCustomTimer = () => {
     const mins = parseInt(customMinutes, 10);
     if (mins > 0 && mins <= 120) {
@@ -166,6 +187,31 @@ function PomodoroTimer({ onMilestoneUnlocked }) {
           Reset
         </button>
       </div>
+
+      {isBreak && (
+        <div className="break-actions">
+          <button
+            className="control-btn break-skip"
+            onClick={skipBreak}
+            aria-label="Skip break and start a work session"
+          >
+            ⏭️ Skip break
+          </button>
+          <button
+            className="control-btn break-snooze"
+            onClick={snoozeBreak}
+            aria-label="Snooze break for 5 more minutes"
+          >
+            😴 Snooze 5 min
+          </button>
+        </div>
+      )}
+
+      {(breakActionLog.skipped > 0 || breakActionLog.snoozed > 0) && (
+        <p className="break-action-log" aria-live="polite">
+          Breaks skipped: {breakActionLog.skipped} · snoozed: {breakActionLog.snoozed}
+        </p>
+      )}
 
       <div className="custom-timer">
         <h3>Set Custom Timer</h3>

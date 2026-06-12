@@ -11,6 +11,7 @@ import SectionNav from './components/Navigation/SectionNav'
 import Confetti from './components/Rewards/Confetti'
 import AchievementToast from './components/Rewards/AchievementToast'
 import { useScrollSpy } from './hooks/useScrollSpy'
+import { usePreferences } from './hooks/usePreferences'
 
 // Section configuration
 const SECTIONS = [
@@ -28,6 +29,7 @@ const SECTION_IDS = SECTIONS.map(s => s.id)
 
 function App() {
   const { activeSection, scrollToSection } = useScrollSpy(SECTION_IDS)
+  const { preferences, toggleTheme } = usePreferences()
   const [celebration, setCelebration] = useState(null)
   const [showConfetti, setShowConfetti] = useState(false)
 
@@ -49,9 +51,19 @@ function App() {
 
   return (
     <div className="app" data-testid="app">
+      <a href="#today" className="skip-link">Skip to main content</a>
       <header className="app-header">
         <h1 className="app-title">🚀 Productivity Hub</h1>
         <p className="app-subtitle">Boost your focus and well-being</p>
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={toggleTheme}
+          aria-pressed={preferences.theme === 'dark'}
+          aria-label={`Switch to ${preferences.theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {preferences.theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+        </button>
       </header>
 
       <SectionNav
@@ -60,32 +72,35 @@ function App() {
         onNavigate={scrollToSection}
       />
 
-      <main className="main-content">
-        <section id="today" className="content-section">
+      <main className="main-content" id="main-content">
+        <section id="today" className="content-section" aria-label="Today's plan">
           <DailyPlanner />
         </section>
 
-        <section id="prioritize" className="content-section">
+        <section id="prioritize" className="content-section" aria-label="Prioritization tools">
           <PrioritizationTools />
         </section>
 
-        <section id="timer" className="content-section">
-          <PomodoroTimer onMilestoneUnlocked={handleMilestoneUnlocked} />
+        <section id="timer" className="content-section" aria-label="Pomodoro timer">
+          <PomodoroTimer
+            onMilestoneUnlocked={handleMilestoneUnlocked}
+            preferences={preferences}
+          />
         </section>
 
-        <section id="audio" className="content-section">
+        <section id="audio" className="content-section" aria-label="Focus audio">
           <AudioPlayer />
         </section>
 
-        <section id="stats" className="content-section">
+        <section id="stats" className="content-section" aria-label="Focus statistics">
           <Statistics />
         </section>
 
-        <section id="breathing" className="content-section">
+        <section id="breathing" className="content-section" aria-label="Breathing exercise">
           <BreathingExercise />
         </section>
 
-        <section id="tips" className="content-section">
+        <section id="tips" className="content-section" aria-label="Productivity tips">
           <ProductivityTips />
         </section>
       </main>

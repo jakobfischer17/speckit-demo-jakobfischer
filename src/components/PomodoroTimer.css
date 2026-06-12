@@ -173,3 +173,23 @@
 .notification-btn:hover {
   background: #7f8c8d;
 }
+
+.break-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+
+.break-skip,
+.break-snooze {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.break-action-log {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}

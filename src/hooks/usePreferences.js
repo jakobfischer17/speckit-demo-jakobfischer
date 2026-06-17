@@ -13,6 +13,7 @@ export const DEFAULT_PREFERENCES = {
   shortBreak: 5,
   longBreak: 15,
   theme: 'light', // 'light' | 'dark'
+  dailyGoal: 1,   // pomodoros per day target
 };
 
 const isValidDuration = (value, min, max) =>
@@ -34,6 +35,9 @@ function sanitize(raw) {
       ? raw.longBreak
       : DEFAULT_PREFERENCES.longBreak,
     theme: raw.theme === 'dark' ? 'dark' : 'light',
+    dailyGoal: isValidDuration(raw.dailyGoal, 1, 20)
+      ? raw.dailyGoal
+      : DEFAULT_PREFERENCES.dailyGoal,
   };
 }
 

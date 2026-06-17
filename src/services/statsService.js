@@ -169,6 +169,12 @@ export async function recordSession(sessionData) {
   const dailyHistory = { ...stats.dailyHistory };
   dailyHistory[today] = (dailyHistory[today] || 0) + sessionData.duration;
   
+  // Update daily pomodoro count (work sessions only)
+  const dailyPomodoros = { ...(stats.dailyPomodoros || {}) };
+  if (isWorkSession) {
+    dailyPomodoros[today] = (dailyPomodoros[today] || 0) + 1;
+  }
+  
   // Prune old daily history entries (keep 30 days)
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -176,6 +182,11 @@ export async function recordSession(sessionData) {
   for (const date of Object.keys(dailyHistory)) {
     if (date < cutoffDate) {
       delete dailyHistory[date];
+    }
+  }
+  for (const date of Object.keys(dailyPomodoros)) {
+    if (date < cutoffDate) {
+      delete dailyPomodoros[date];
     }
   }
   
@@ -202,6 +213,7 @@ export async function recordSession(sessionData) {
     longestStreak: newLongestStreak,
     lastActiveDate,
     dailyHistory,
+    dailyPomodoros,
   });
   
   // Check for milestone (only for work sessions)

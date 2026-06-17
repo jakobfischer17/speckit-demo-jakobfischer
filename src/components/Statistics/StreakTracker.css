@@ -1,0 +1,275 @@
+/* ==========================================
+   StreakTracker – goal setter + calendar
+   ========================================== */
+
+.streak-tracker {
+  margin-top: var(--spacing-xl, 2rem);
+  padding: var(--spacing-lg, 1.5rem);
+  border-radius: var(--radius-lg, 15px);
+  background: var(--color-bg-primary, #fff);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.streak-tracker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm, 0.5rem);
+  margin-bottom: var(--spacing-lg, 1.5rem);
+}
+
+.streak-tracker__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text, #333);
+}
+
+/* ---- goal setter ---- */
+.streak-tracker__goal {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 0.25rem);
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #666);
+}
+
+.streak-tracker__goal-label {
+  white-space: nowrap;
+}
+
+.streak-tracker__goal-input {
+  width: 3.5rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.875rem;
+  text-align: center;
+  color: var(--color-text, #333);
+  background: var(--color-bg-primary, #fff);
+  transition: border-color var(--transition-fast, 0.15s ease);
+}
+
+.streak-tracker__goal-input:focus {
+  outline: none;
+  border-color: var(--color-primary, #667eea);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* ---- reward banner ---- */
+.streak-tracker__reward {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md, 1rem);
+  padding: var(--spacing-md, 1rem) var(--spacing-lg, 1.5rem);
+  border-radius: var(--radius-md, 12px);
+  background: linear-gradient(135deg, rgba(237, 137, 54, 0.12) 0%, rgba(245, 101, 101, 0.12) 100%);
+  margin-bottom: var(--spacing-lg, 1.5rem);
+  animation: streak-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.streak-tracker__reward-icon {
+  font-size: 2.25rem;
+  animation: streak-flame 1.6s ease-in-out infinite;
+  transform-origin: center bottom;
+  display: inline-block;
+}
+
+.streak-tracker__reward-text {
+  flex: 1;
+}
+
+.streak-tracker__reward-label {
+  margin: 0 0 0.2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text, #333);
+}
+
+.streak-tracker__reward-message {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #666);
+}
+
+/* ---- streak count ---- */
+.streak-tracker__count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm, 0.5rem);
+  margin-bottom: var(--spacing-lg, 1.5rem);
+  font-size: 1rem;
+  color: var(--color-text-muted, #666);
+}
+
+.streak-tracker__count-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-warning, #ed8936);
+  line-height: 1;
+}
+
+.streak-tracker__count-unit {
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+/* ---- 28-day calendar ---- */
+.streak-tracker__calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.streak-tracker__day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.6rem;
+  color: var(--color-text-muted, #999);
+  background: var(--color-bg-secondary, #f9fafb);
+  border: 1.5px solid transparent;
+  position: relative;
+  cursor: default;
+  transition: transform 0.15s ease;
+  padding: 2px;
+  min-width: 0;
+}
+
+.streak-tracker__day:hover {
+  transform: scale(1.1);
+  z-index: 1;
+}
+
+.streak-tracker__day--met {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #34d399;
+  color: #065f46;
+  animation: streak-cell-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.streak-tracker__day--today {
+  border-color: var(--color-primary, #667eea);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+}
+
+.streak-tracker__day--today.streak-tracker__day--met {
+  border-color: #059669;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.3);
+}
+
+.streak-tracker__day-check {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.streak-tracker__day-label {
+  font-size: 0.55rem;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.streak-tracker__day-count {
+  font-size: 0.6rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* ---- legend ---- */
+.streak-tracker__legend {
+  display: flex;
+  gap: var(--spacing-md, 1rem);
+  justify-content: flex-end;
+  margin-top: var(--spacing-sm, 0.5rem);
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #999);
+}
+
+.streak-tracker__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.streak-tracker__legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.streak-tracker__legend-dot--met {
+  background: #34d399;
+}
+
+.streak-tracker__legend-dot--empty {
+  background: var(--color-bg-secondary, #f3f4f6);
+  border: 1px solid #d1d5db;
+}
+
+/* ---- animations ---- */
+@keyframes streak-flame {
+  0%, 100% { transform: scale(1) rotate(-3deg); }
+  25%       { transform: scale(1.1) rotate(3deg); }
+  50%       { transform: scale(0.95) rotate(-2deg); }
+  75%       { transform: scale(1.08) rotate(2deg); }
+}
+
+@keyframes streak-pop-in {
+  from { opacity: 0; transform: scale(0.85) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes streak-cell-pop {
+  from { transform: scale(0.7); }
+  to   { transform: scale(1); }
+}
+
+/* ---- responsive ---- */
+@media (max-width: 480px) {
+  .streak-tracker__calendar {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .streak-tracker__day {
+    font-size: 0.5rem;
+  }
+
+  .streak-tracker__day-label {
+    display: none;
+  }
+
+  .streak-tracker__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ---- reduced-motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .streak-tracker__reward-icon {
+    animation: none;
+  }
+
+  .streak-tracker__reward {
+    animation: none;
+  }
+
+  .streak-tracker__day--met {
+    animation: none;
+  }
+
+  .streak-tracker__day {
+    transition: none;
+  }
+}

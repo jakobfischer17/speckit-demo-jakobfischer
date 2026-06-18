@@ -217,7 +217,7 @@ function PomodoroTimer({ onMilestoneUnlocked, preferences }) {
 
   return (
     <div className="pomodoro-container">
-      <h1>≡ƒìà Pomodoro Timer</h1>
+      <h1>🍅 Pomodoro Timer</h1>
       
       {sessionsCompleted > 0 && (
         <div className="session-counter">

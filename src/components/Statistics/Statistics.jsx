@@ -2,6 +2,7 @@ import { useStats } from '../../hooks/useStats';
 import StatsCard from './StatsCard';
 import WeeklyChart from './WeeklyChart';
 import WeeklySummary from './WeeklySummary';
+import StreakTracker from './StreakTracker';
 import './Statistics.css';
 
 /**
@@ -92,6 +93,9 @@ function Statistics() {
         dailyHistory={dailyHistory}
         currentStreak={stats?.currentStreak || 0}
       />
+
+      {/* Daily goals streak tracker with custom goals */}
+      <StreakTracker />
 
       {/* Motivational message based on stats */}
       {stats && (

@@ -1,5 +1,4 @@
 import { useStats } from '../../hooks/useStats';
-import { usePreferences } from '../../hooks/usePreferences';
 import StatsCard from './StatsCard';
 import WeeklyChart from './WeeklyChart';
 import WeeklySummary from './WeeklySummary';
@@ -19,7 +18,6 @@ function Statistics() {
     formattedTotalTime,
     todayFocusTime,
   } = useStats();
-  const { preferences, updatePreference } = usePreferences();
 
   if (isLoading) {
     return (
@@ -96,12 +94,8 @@ function Statistics() {
         currentStreak={stats?.currentStreak || 0}
       />
 
-      {/* Daily streak tracker with custom goal */}
-      <StreakTracker
-        dailyPomodoros={stats?.dailyPomodoros || {}}
-        dailyGoal={preferences.dailyGoal}
-        onGoalChange={(val) => updatePreference('dailyGoal', val)}
-      />
+      {/* Daily goals streak tracker with custom goals */}
+      <StreakTracker />
 
       {/* Motivational message based on stats */}
       {stats && (

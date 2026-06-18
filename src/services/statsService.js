@@ -8,6 +8,7 @@ import {
   cleanupOldSessions,
   isIndexedDBAvailable,
 } from './db.js';
+import { toLocalDateString } from '../utils/date.js';
 
 /**
  * Stats service for Focus Enhancement Suite.
@@ -64,7 +65,7 @@ const MILESTONES = [10, 25, 50, 100];
  * @returns {string} Date string (YYYY-MM-DD)
  */
 function getDateString(timestamp) {
-  return new Date(timestamp).toISOString().split('T')[0];
+  return toLocalDateString(timestamp);
 }
 
 /**
@@ -82,7 +83,7 @@ function getTodayString() {
 function getYesterdayString() {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  return yesterday.toISOString().split('T')[0];
+  return toLocalDateString(yesterday);
 }
 
 /**
@@ -169,24 +170,13 @@ export async function recordSession(sessionData) {
   const dailyHistory = { ...stats.dailyHistory };
   dailyHistory[today] = (dailyHistory[today] || 0) + sessionData.duration;
   
-  // Update daily pomodoro count (work sessions only)
-  const dailyPomodoros = { ...(stats.dailyPomodoros || {}) };
-  if (isWorkSession) {
-    dailyPomodoros[today] = (dailyPomodoros[today] || 0) + 1;
-  }
-  
   // Prune old daily history entries (keep 30 days)
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const cutoffDate = thirtyDaysAgo.toISOString().split('T')[0];
+  const cutoffDate = toLocalDateString(thirtyDaysAgo);
   for (const date of Object.keys(dailyHistory)) {
     if (date < cutoffDate) {
       delete dailyHistory[date];
-    }
-  }
-  for (const date of Object.keys(dailyPomodoros)) {
-    if (date < cutoffDate) {
-      delete dailyPomodoros[date];
     }
   }
   
@@ -213,7 +203,6 @@ export async function recordSession(sessionData) {
     longestStreak: newLongestStreak,
     lastActiveDate,
     dailyHistory,
-    dailyPomodoros,
   });
   
   // Check for milestone (only for work sessions)

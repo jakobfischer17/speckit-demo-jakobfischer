@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { toLocalDateString } from '../utils/date.js';
 
 /**
  * Streak milestone definitions, ordered from highest to lowest.
@@ -12,34 +13,27 @@ export const STREAK_MILESTONES = [
   { days:  3, icon: '⚡', label: 'On a Roll',        message: '3 days in a row!' },
 ];
 
-function toDateString(date) {
-  return date.toISOString().split('T')[0];
-}
+const CALENDAR_DAYS = 28;
 
 /**
- * Build a 28-day calendar window ending today from the per-day pomodoro counts
- * and the user's daily goal.
+ * Build a 28-day calendar window ending today from a completion map.
  *
- * @param {Object} dailyPomodoros  { 'YYYY-MM-DD': count }
- * @param {number} dailyGoal       Target pomodoros per day (>= 1)
- * @returns {Array<{key, label, count, goalMet, isToday}>}
+ * @param {Object} completions  { 'YYYY-MM-DD': true } – days the goal was done
+ * @returns {Array<{key, label, completed, isToday}>}
  */
-function buildCalendar(dailyPomodoros, dailyGoal) {
-  const map = dailyPomodoros || {};
+function buildCalendar(completions) {
+  const map = completions || {};
   const today = new Date();
   const days = [];
 
-  for (let i = 27; i >= 0; i--) {
+  for (let i = CALENDAR_DAYS - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    const key = toDateString(d);
-    const count = Number(map[key]) || 0;
-    const goalMet = dailyGoal > 0 && count >= dailyGoal;
+    const key = toLocalDateString(d);
     days.push({
       key,
       label: d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-      count,
-      goalMet,
+      completed: Boolean(map[key]),
       isToday: i === 0,
     });
   }
@@ -48,24 +42,23 @@ function buildCalendar(dailyPomodoros, dailyGoal) {
 }
 
 /**
- * Calculate consecutive days where the daily goal was met, counting
- * backwards from the most recent completed day.
- * Today is included if the goal has already been met today; otherwise
- * the streak counts from yesterday.
+ * Calculate consecutive days the goal was completed, counting backwards from
+ * the most recent completed day. Today is included when already completed;
+ * otherwise the streak counts from yesterday so an in-progress day never
+ * breaks an existing streak.
  *
  * @param {Array} calendar  Output of buildCalendar
  * @returns {number}
  */
-function calcGoalStreak(calendar) {
+function calcStreak(calendar) {
   let streak = 0;
-  // Walk backwards from today
   for (let i = calendar.length - 1; i >= 0; i--) {
     const day = calendar[i];
-    if (day.isToday && !day.goalMet) {
-      // Today hasn't been completed yet; keep going to include yesterday
+    if (day.isToday && !day.completed) {
+      // Today isn't done yet; keep going to include yesterday.
       continue;
     }
-    if (day.goalMet) {
+    if (day.completed) {
       streak++;
     } else {
       break;
@@ -75,31 +68,35 @@ function calcGoalStreak(calendar) {
 }
 
 /**
- * useStreak – derive a streak calendar and goal-streak from stored stats.
+ * Resolve the highest milestone reached for a given streak length.
+ * @param {number} streak
+ * @returns {Object|null}
+ */
+export function rewardForStreak(streak) {
+  for (const milestone of STREAK_MILESTONES) {
+    if (streak >= milestone.days) {
+      return milestone;
+    }
+  }
+  return null;
+}
+
+/**
+ * useStreak – derive a 28-day calendar, current streak, and active reward from
+ * a map of completed days. Works for any daily goal (a custom habit, a
+ * pomodoro target, etc.) as long as completion is expressed as
+ * { 'YYYY-MM-DD': true }.
  *
  * @param {Object} params
- * @param {Object} params.dailyPomodoros  { 'YYYY-MM-DD': count } from stats
- * @param {number} params.dailyGoal       Pomodoros-per-day target from preferences
- * @returns {{ calendar, goalStreak, currentReward, STREAK_MILESTONES }}
+ * @param {Object} params.completions  { 'YYYY-MM-DD': true }
+ * @returns {{ calendar, streak, currentReward, STREAK_MILESTONES }}
  */
-export function useStreak({ dailyPomodoros = {}, dailyGoal = 1 }) {
-  const calendar = useMemo(
-    () => buildCalendar(dailyPomodoros, dailyGoal),
-    [dailyPomodoros, dailyGoal],
-  );
+export function useStreak({ completions = {} } = {}) {
+  const calendar = useMemo(() => buildCalendar(completions), [completions]);
+  const streak = useMemo(() => calcStreak(calendar), [calendar]);
+  const currentReward = useMemo(() => rewardForStreak(streak), [streak]);
 
-  const goalStreak = useMemo(() => calcGoalStreak(calendar), [calendar]);
-
-  const currentReward = useMemo(() => {
-    for (const milestone of STREAK_MILESTONES) {
-      if (goalStreak >= milestone.days) {
-        return milestone;
-      }
-    }
-    return null;
-  }, [goalStreak]);
-
-  return { calendar, goalStreak, currentReward, STREAK_MILESTONES };
+  return { calendar, streak, currentReward, STREAK_MILESTONES };
 }
 
 export default useStreak;

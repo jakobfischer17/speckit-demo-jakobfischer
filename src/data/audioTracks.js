@@ -48,6 +48,7 @@ export const AMBIENT_TRACKS = [
     name: 'Lo-fi Beats',
     description: 'Chill hip-hop beats for studying and focus',
     youtubeId: 'jfKfPfyJRdk', // Lofi Girl - beats to relax/study to
+    fallbackIds: ['4xDzrJKXOOY', 'rPjez8z61rI'], // alternate lofi streams
     icon: '🎧',
     color: '#48bb78',
   },
@@ -56,6 +57,7 @@ export const AMBIENT_TRACKS = [
     name: 'Rain & Thunder',
     description: 'Calming rain sounds for concentration',
     youtubeId: 'mPZkdNFkNps', // Relaxing rain sounds
+    fallbackIds: ['yIQd2Ya0Ziw', 'q76bMs-NwRk'], // alternate rain/nature
     icon: '🌧️',
     color: '#4299e1',
   },
@@ -64,6 +66,7 @@ export const AMBIENT_TRACKS = [
     name: 'Ambient Piano',
     description: 'Soft piano music for peaceful focus',
     youtubeId: 'hDgtxlEX2uw', // Soft piano music
+    fallbackIds: ['lFcSrYw-ARY', 'XULUBg_ZcAU'], // alternate piano
     icon: '🎹',
     color: '#ed8936',
   },

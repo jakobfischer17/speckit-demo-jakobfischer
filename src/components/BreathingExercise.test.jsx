@@ -17,7 +17,7 @@ describe('BreathingExercise', () => {
     expect(screen.getByTestId('box-breathing-visual')).toBeInTheDocument();
 
     const boxDot = screen.getByTestId('box-breathing-dot');
-    const initialLeft = boxDot.style.left;
+    expect(boxDot.className).not.toContain('breathing-box__dot--active');
 
     act(() => {
       fireEvent.click(screen.getByRole('button', { name: 'Start' }));
@@ -27,7 +27,8 @@ describe('BreathingExercise', () => {
       vi.advanceTimersByTime(2000);
     });
 
-    expect(boxDot.style.left).not.toBe(initialLeft);
+    expect(boxDot.className).toContain('breathing-box__dot--active');
+    expect(boxDot.style.getPropertyValue('--box-cycle')).toBe('16s');
     expect(screen.getByTestId('breathing-countdown')).toHaveTextContent('2');
   });
 

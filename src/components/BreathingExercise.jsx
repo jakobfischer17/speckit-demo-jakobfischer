@@ -42,20 +42,13 @@ function getProgress(seconds, duration) {
   return Math.min(seconds / duration, 1);
 }
 
-function getBoxDotPosition(phaseIndex, progress) {
-  const clampedProgress = Math.max(0, Math.min(progress, 1));
-
-  switch (phaseIndex % 4) {
-    case 0:
-      return { x: clampedProgress * 100, y: 0 };
-    case 1:
-      return { x: 100, y: clampedProgress * 100 };
-    case 2:
-      return { x: 100 - clampedProgress * 100, y: 100 };
-    default:
-      return { x: 0, y: 100 - clampedProgress * 100 };
-  }
-}
+// Total time to trace all four edges of the square once. The dot animation runs
+// at a constant speed over this whole cycle so it glides continuously around the
+// square (top → right → bottom → left) in lock-step with the breathing phases.
+const BOX_CYCLE_SECONDS = EXERCISES.box.phases.reduce(
+  (total, phase) => total + phase.duration,
+  0
+);
 
 function getRelaxMarkerPosition(phase, progress) {
   if (phase === 'inhale') {
@@ -89,10 +82,6 @@ function BreathingExercise() {
   const progress = getProgress(seconds, currentPhaseData.duration);
   const secondsRemaining = currentPhaseData.duration - seconds;
 
-  const boxDot = useMemo(
-    () => getBoxDotPosition(currentPhaseIndex, progress),
-    [currentPhaseIndex, progress]
-  );
   const relaxMarker = useMemo(
     () => getRelaxMarkerPosition(phase, progress),
     [phase, progress]
@@ -151,10 +140,7 @@ function BreathingExercise() {
             <div
               className={`breathing-box__dot ${isActive ? 'breathing-box__dot--active' : ''}`}
               data-testid="box-breathing-dot"
-              style={{
-                left: `calc(${boxDot.x}% - 0.65rem)`,
-                top: `calc(${boxDot.y}% - 0.65rem)`,
-              }}
+              style={{ '--box-cycle': `${BOX_CYCLE_SECONDS}s` }}
             />
             <div className="breathing-stage__content">
               <div className="instruction" data-testid="breathing-instruction">{currentPhaseData.instruction}</div>

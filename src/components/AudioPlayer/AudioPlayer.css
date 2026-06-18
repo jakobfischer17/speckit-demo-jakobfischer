@@ -332,8 +332,12 @@
   box-shadow: var(--shadow-sm, 0 2px 10px rgba(0, 0, 0, 0.1));
 }
 
-.youtube-embed iframe {
+.youtube-embed iframe,
+.youtube-embed__mount iframe {
   display: block;
+  width: 100%;
+  height: 200px;
+  border: 0;
 }
 
 .embed-note {

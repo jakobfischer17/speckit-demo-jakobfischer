@@ -175,7 +175,6 @@ export async function initializeStats() {
     longestStreak: 0,
     lastActiveDate: null,
     dailyHistory: {},
-    dailyPomodoros: {},
     updatedAt: Date.now(),
   };
   

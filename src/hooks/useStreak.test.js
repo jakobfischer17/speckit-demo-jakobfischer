@@ -1,118 +1,79 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useStreak, STREAK_MILESTONES } from './useStreak';
+import { dateStringWithOffset } from '../utils/date';
 
-// Helper: returns a YYYY-MM-DD string for a date N days from today
-function dateOffset(n) {
-  const d = new Date();
-  d.setDate(d.getDate() + n);
-  return d.toISOString().split('T')[0];
-}
-
-const today = dateOffset(0);
-const yesterday = dateOffset(-1);
-const twoDaysAgo = dateOffset(-2);
-const fourDaysAgo = dateOffset(-4);
+const today = dateStringWithOffset(0);
+const yesterday = dateStringWithOffset(-1);
+const twoDaysAgo = dateStringWithOffset(-2);
+const fourDaysAgo = dateStringWithOffset(-4);
 
 describe('useStreak', () => {
   it('returns a 28-day calendar', () => {
-    const { result } = renderHook(() => useStreak({ dailyPomodoros: {}, dailyGoal: 1 }));
+    const { result } = renderHook(() => useStreak({ completions: {} }));
     expect(result.current.calendar).toHaveLength(28);
   });
 
-  it('marks today as isToday', () => {
-    const { result } = renderHook(() => useStreak({ dailyPomodoros: {}, dailyGoal: 1 }));
+  it('marks today as isToday with the correct local key', () => {
+    const { result } = renderHook(() => useStreak({ completions: {} }));
     const todayEntry = result.current.calendar.find((d) => d.isToday);
     expect(todayEntry).toBeDefined();
     expect(todayEntry.key).toBe(today);
   });
 
-  it('marks a day as goalMet when count >= dailyGoal', () => {
-    const dailyPomodoros = { [today]: 2 };
-    const { result } = renderHook(() =>
-      useStreak({ dailyPomodoros, dailyGoal: 2 }),
-    );
+  it('marks a day completed when present in the completions map', () => {
+    const { result } = renderHook(() => useStreak({ completions: { [today]: true } }));
     const todayEntry = result.current.calendar.find((d) => d.isToday);
-    expect(todayEntry.goalMet).toBe(true);
+    expect(todayEntry.completed).toBe(true);
   });
 
-  it('does not mark a day as goalMet when count < dailyGoal', () => {
-    const dailyPomodoros = { [today]: 1 };
-    const { result } = renderHook(() =>
-      useStreak({ dailyPomodoros, dailyGoal: 3 }),
-    );
+  it('does not mark a day completed when absent', () => {
+    const { result } = renderHook(() => useStreak({ completions: {} }));
     const todayEntry = result.current.calendar.find((d) => d.isToday);
-    expect(todayEntry.goalMet).toBe(false);
+    expect(todayEntry.completed).toBe(false);
   });
 
-  it('goalStreak is 0 with no activity', () => {
-    const { result } = renderHook(() => useStreak({ dailyPomodoros: {}, dailyGoal: 1 }));
-    expect(result.current.goalStreak).toBe(0);
+  it('streak is 0 with no completions', () => {
+    const { result } = renderHook(() => useStreak({ completions: {} }));
+    expect(result.current.streak).toBe(0);
   });
 
-  it('goalStreak counts today when goal is met today', () => {
-    const dailyPomodoros = { [today]: 1 };
-    const { result } = renderHook(() =>
-      useStreak({ dailyPomodoros, dailyGoal: 1 }),
-    );
-    expect(result.current.goalStreak).toBe(1);
+  it('streak counts today when completed today', () => {
+    const { result } = renderHook(() => useStreak({ completions: { [today]: true } }));
+    expect(result.current.streak).toBe(1);
   });
 
-  it('goalStreak counts consecutive days ending today', () => {
-    const dailyPomodoros = {
-      [today]:       2,
-      [yesterday]:   2,
-      [twoDaysAgo]:  2,
-    };
-    const { result } = renderHook(() =>
-      useStreak({ dailyPomodoros, dailyGoal: 2 }),
-    );
-    expect(result.current.goalStreak).toBe(3);
+  it('streak counts consecutive days ending today', () => {
+    const completions = { [today]: true, [yesterday]: true, [twoDaysAgo]: true };
+    const { result } = renderHook(() => useStreak({ completions }));
+    expect(result.current.streak).toBe(3);
   });
 
-  it('goalStreak stops at a gap', () => {
-    // today + yesterday met, two days ago not met, four days ago met
-    const dailyPomodoros = {
-      [today]:       1,
-      [yesterday]:   1,
-      [fourDaysAgo]: 1,
-    };
-    const { result } = renderHook(() =>
-      useStreak({ dailyPomodoros, dailyGoal: 1 }),
-    );
-    expect(result.current.goalStreak).toBe(2);
+  it('streak stops at a gap', () => {
+    const completions = { [today]: true, [yesterday]: true, [fourDaysAgo]: true };
+    const { result } = renderHook(() => useStreak({ completions }));
+    expect(result.current.streak).toBe(2);
   });
 
-  it('goalStreak counts from yesterday when today goal not yet met', () => {
-    const dailyPomodoros = {
-      [yesterday]:   1,
-      [twoDaysAgo]:  1,
-    };
-    const { result } = renderHook(() =>
-      useStreak({ dailyPomodoros, dailyGoal: 1 }),
-    );
-    // today is not met (skip), yesterday + twoDaysAgo = 2
-    expect(result.current.goalStreak).toBe(2);
+  it('streak counts from yesterday when today not yet done', () => {
+    const completions = { [yesterday]: true, [twoDaysAgo]: true };
+    const { result } = renderHook(() => useStreak({ completions }));
+    expect(result.current.streak).toBe(2);
   });
 
   it('currentReward is null for streak < 3', () => {
-    const dailyPomodoros = { [today]: 1, [yesterday]: 1 };
-    const { result } = renderHook(() =>
-      useStreak({ dailyPomodoros, dailyGoal: 1 }),
-    );
+    const completions = { [today]: true, [yesterday]: true };
+    const { result } = renderHook(() => useStreak({ completions }));
     expect(result.current.currentReward).toBeNull();
   });
 
   it('currentReward is the highest matched milestone', () => {
-    // Build 7 consecutive days of met goals
-    const dailyPomodoros = {};
+    const completions = {};
     for (let i = 0; i < 7; i++) {
-      dailyPomodoros[dateOffset(-i)] = 1;
+      completions[dateStringWithOffset(-i)] = true;
     }
-    const { result } = renderHook(() =>
-      useStreak({ dailyPomodoros, dailyGoal: 1 }),
-    );
-    expect(result.current.goalStreak).toBe(7);
+    const { result } = renderHook(() => useStreak({ completions }));
+    expect(result.current.streak).toBe(7);
     expect(result.current.currentReward?.days).toBe(7);
     expect(result.current.currentReward?.icon).toBe('🏆');
   });
